@@ -1,0 +1,128 @@
+/* Global styles */
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-image: url('../images/bg.png'); /* Path to your background image */
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-size: cover;
+    background-position: center;
+}
+
+/* Styles for landing page */
+.container {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 30px;
+    background-color: rgba(255, 255, 255, 0.8); /* Add opacity to make text readable */
+    border-radius: 10px;
+    box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    color: #333; /* Set default text color */
+
+    position: relative;
+
+    top: 250px;
+    bottom: 40px;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.school-logo {
+    max-width: 100px;
+    margin-right: 20px;
+}
+
+.school-info {
+    text-align: center;
+}
+
+.school-name {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.school-address {
+    font-size: 16px;
+    margin-top: 10px;
+}
+
+h1 {
+    margin-bottom: 20px;
+}
+
+p {
+    font-size: 18px;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #d9534f; /* Red color */
+    color: #fff; /* White text color */
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.btn:hover {
+    background-color: #c9302c; /* Darker red color on hover */
+}
+
+/* Styles for navigation input page */
+.navigation-page-container {
+    max-width: 800px;
+    margin: 70px auto; /* Adjust the auto value to center horizontally */
+    padding: 30px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    color: #333;
+
+    position: relative;
+
+    top: 250px;
+    bottom: 40px;
+}
+
+/* Additional styles for navigation input form, dropdown, etc. */
+.navigation-page-container form {
+    margin-top: 20px;
+}
+
+.navigation-page-container select {
+    padding: 10px;
+    margin: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.navigation-page-container input[type="text"] {
+    padding: 10px;
+    margin: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.navigation-page-container button {
+    padding: 10px 20px;
+    background-color: #d9534f;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.navigation-page-container button:hover {
+    background-color: #c9302c;
+}
