@@ -4,8 +4,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Modernize Free</title>
-  <link rel="shortcut icon" type="image/png" href="assets/images/logos/favicon.png" />
+  <title>SEC Automated Directory System</title>
+  <link rel="shortcut icon" type="image/png" href="assets/images/logos/logo_sec.png" />
   <link rel="stylesheet" href="assets/css/styles.min.css" />
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAm4XE_BJt3LlMcvJi1erXZcY7Ln8xA-qg&libraries=places&callback=initMap" async defer></script>
     <style>

@@ -19,7 +19,7 @@
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+                    <h5 class="modal-title" id="exampleModalLabel">New Location</h5>
                 </div>
                 <div class="modal-body">
                     <div id="map"></div>
@@ -69,7 +69,7 @@
             });
 
             var infowindow = new google.maps.InfoWindow({
-                content: '<p>' + location.label + '</p>'
+                content: '<p><strong>' + location.label + '</strong></p>'
             });
 
             allLocationsInfowindows.push(infowindow);
