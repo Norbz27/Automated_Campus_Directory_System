@@ -1,35 +1,48 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>admin</title>
-    <link rel="stylesheet" href="../css/bootstrap.min.css">
-    <link rel="stylesheet" href="../admin/css/admin-css.css">
-    <link rel="stylesheet" href="../admin/css/header.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Modernize Free</title>
+  <link rel="shortcut icon" type="image/png" href="assets/images/logos/favicon.png" />
+  <link rel="stylesheet" href="assets/css/styles.min.css" />
 </head>
+
 <body>
-  <?php
-    include_once '../admin/header.php';
-  ?>
-  <div class="container-fluid">
-    <form class="mx-auto" action="../admin">
-      <h4 class="text-center" style="color: black;">Login</h4>
-      <div class="form-group mb-3 mt-5">
-        <label for="exampleInputEmail1">User name</label>
-        <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+  <!--  Body Wrapper -->
+  <div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
+    data-sidebar-position="fixed" data-header-position="fixed">
+    <div class="position-relative overflow-hidden radial-gradient min-vh-100 d-flex align-items-center justify-content-center">
+      <div class="d-flex align-items-center justify-content-center" style="width: 1000px;">
+        <div class="row justify-content-center w-100">
+          <div class="col-md-8 col-lg-6 col-xxl-3">
+            <div class="card mb-0">
+              <div class="card-body">
+                <a href="" class="text-nowrap logo-img text-center d-block py-3 w-100">
+                  <img src="assets/images/logos/logo_sec.png" width="60" alt="">
+                </a>
+                <p class="text-center">Log in your account</p>
+                <form>
+                  <div class="mb-3">
+                    <label for="exampleInputEmail1" class="form-label">Username</label>
+                    <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+                  </div>
+                  <div class="mb-4">
+                    <label for="exampleInputPassword1" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="exampleInputPassword1">
+                  </div>
+                  <a href="index.php" class="btn btn-primary w-100 py-8 fs-4 mb-4 rounded-2">Sign In</a>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="form-group mb-3">
-        <label for="exampleInputPassword1">Password</label>
-        <input type="password" class="form-control" id="exampleInputPassword1">
-      </div>
-      <div id="emailHelp" class="form-text">
-        Forgot password?
-      </div>
-      <button type="submit" class="btn btn-primary mt-5">Login</button>
-    </form>
+    </div>
   </div>
+  <script src="assets/libs/jquery/dist/jquery.min.js"></script>
+  <script src="assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-<script type="text/javascript" src="../js/bootstrap.bundle.js"></script>
-<script type="text/javascript" src="../js/bootstrap.bundle.min.js"></script>
+
 </html>
