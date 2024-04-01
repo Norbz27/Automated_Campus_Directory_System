@@ -18,18 +18,24 @@
     <div class="navigation-page-container">
         <h1>Navigation Input</h1>
         <div class="navigation-page">
-            <h2>Select a Location or Enter a Specific Destination:</h2>
+            <h2>Select a Location:</h2>
             <select id="locations-dropdown">
                 <option value="">Select a Location</option>
                 <!-- Dropdown options will be populated dynamically -->
             </select>
-            <input type="text" id="manual-input" placeholder="Enter a location or room number/name">
-            <button onclick="calculateAndDisplayDirections()">Navigate</button>
+            <button onclick="showSelectedLocation()">Show Location</button>
+            <button onclick="calculateAndDisplayDirections()">Get Directions</button>
+            <p id="error-message" style="color: red;"></p>
         </div>
         <div id="map"></div>
     </div>
 
     <script>
+        var map;
+        var userLocationMarker;
+        var directionsService;
+        var directionsRenderer;
+
         function showNavigationPage() {
             var navigationPage = document.querySelector('.navigation-page');
             navigationPage.style.display = 'block';
@@ -54,58 +60,87 @@
                         option.textContent = location.label;
                         option.setAttribute('data-lat', location.latitude); // Add latitude as data attribute
                         option.setAttribute('data-lng', location.longitude); // Add longitude as data attribute
-                        option.setAttribute('data-label', location.label); // Add label as data attribute
                         dropdown.appendChild(option);
                     });
                 }
             });
         }
 
+        function showSelectedLocation() {
+            var selectedOption = document.getElementById('locations-dropdown').options[document.getElementById('locations-dropdown').selectedIndex];
+            var destinationLat = parseFloat(selectedOption.getAttribute('data-lat'));
+            var destinationLng = parseFloat(selectedOption.getAttribute('data-lng'));
+
+            if (!isNaN(destinationLat) && !isNaN(destinationLng)) {
+                var destination = { lat: destinationLat, lng: destinationLng };
+
+                // Initialize the map centered on the selected location
+                map = new google.maps.Map(document.getElementById('map'), {
+                    zoom: 15,
+                    center: destination
+                });
+
+                // Add a marker at the selected location
+                var marker = new google.maps.Marker({
+                    position: destination,
+                    map: map,
+                    title: selectedOption.value
+                });
+            } else {
+                showError('Invalid coordinates for the selected location.');
+            }
+        }
+
         function calculateAndDisplayDirections() {
             var selectedOption = document.getElementById('locations-dropdown').options[document.getElementById('locations-dropdown').selectedIndex];
             var destinationLat = parseFloat(selectedOption.getAttribute('data-lat'));
             var destinationLng = parseFloat(selectedOption.getAttribute('data-lng'));
-            var destinationLabel = selectedOption.getAttribute('data-label');
 
             if (!isNaN(destinationLat) && !isNaN(destinationLng)) {
                 var destination = { lat: destinationLat, lng: destinationLng };
 
                 // Get user's current location
-                getUserLocation(destination, destinationLabel);
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(function(position) {
+                        var origin = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+
+                        // Initialize the map centered on the user's location
+                        map = new google.maps.Map(document.getElementById('map'), {
+                            zoom: 15,
+                            center: origin
+                        });
+
+                        // Add a marker at the user's location
+                        userLocationMarker = new google.maps.Marker({
+                            position: origin,
+                            map: map,
+                            title: 'Your Location'
+                        });
+
+                        // Create the directions service and renderer
+                        directionsService = new google.maps.DirectionsService();
+                        directionsRenderer = new google.maps.DirectionsRenderer();
+                        directionsRenderer.setMap(map);
+
+                        // Calculate directions between user's location and destination
+                        calculateDirections(origin, destination);
+                    }, function() {
+                        // Handle geolocation errors
+                        handleLocationError(true, map.getCenter());
+                    });
+                } else {
+                    // Browser doesn't support Geolocation
+                    handleLocationError(false, map.getCenter());
+                }
             } else {
-                alert('Invalid coordinates for the selected location.');
+                showError('Invalid coordinates for the selected location.');
             }
         }
 
-        function getUserLocation(destination, destinationLabel) {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    var origin = {
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude
-                    };
-
-                    // Calculate directions between user's location and destination
-                    calculateDirections(origin, destination, destinationLabel);
-                }, function() {
-                    // Handle geolocation errors
-                    handleLocationError(true, map.getCenter());
-                });
-            } else {
-                // Browser doesn't support Geolocation
-                handleLocationError(false, map.getCenter());
-            }
-        }
-
-        function calculateDirections(origin, destination, destinationLabel) {
-            var directionsService = new google.maps.DirectionsService();
-            var directionsRenderer = new google.maps.DirectionsRenderer();
-            var map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 7,
-                center: origin
-            });
-            directionsRenderer.setMap(map);
-
+        function calculateDirections(origin, destination) {
             var request = {
                 origin: origin,
                 destination: destination,
@@ -115,15 +150,8 @@
             directionsService.route(request, function(result, status) {
                 if (status == 'OK') {
                     directionsRenderer.setDirections(result);
-
-                    // Display the label on the selected location marker
-                    var marker = new google.maps.Marker({
-                        position: destination,
-                        map: map,
-                        title: destinationLabel // Set the label as the marker's title
-                    });
                 } else {
-                    alert('Directions request failed due to ' + status);
+                    showError('Directions request failed due to ' + status);
                 }
             });
         }
@@ -134,6 +162,10 @@
             infoWindow.setContent(browserHasGeolocation ?
                                   'Error: The Geolocation service failed.' :
                                   'Error: Your browser doesn\'t support geolocation.');
+        }
+
+        function showError(message) {
+            document.getElementById('error-message').textContent = message;
         }
 
         // Calling the function to show the navigation page immediately upon loading
