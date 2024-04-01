@@ -7,6 +7,7 @@
   <title>Automated Campus Directory System</title>
   <link rel="shortcut icon" type="image/png" href="assets/images/logos/logo_sec.png" />
   <link rel="stylesheet" href="assets/css/styles.min.css" />
+  <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
   <script async
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAm4XE_BJt3LlMcvJi1erXZcY7Ln8xA-qg&loading=async&callback=initMap">
 </script>  

@@ -32,6 +32,11 @@
         </div>
     </div>
 
+    <!-- Hidden form for deleting location -->
+    <form id="deleteLocationForm" method="post" action="delete_location.php">
+        <input type="hidden" id="deleteLocationLabel" name="label" value="">
+    </form>
+
     
     <script>
         var allLocationsMap;
@@ -68,8 +73,11 @@
                 map: allLocationsMap
             });
 
+            var infowindowContent = '<center><h4><strong>' + location.label + '</strong></h4></center>';
+            infowindowContent += '<center><button class="btn btn-primary btn-sm" onclick="deleteLocation(\'' + location.label + '\')">Delete Location</button></center>';
+
             var infowindow = new google.maps.InfoWindow({
-                content: '<p><strong>' + location.label + '</strong></p>'
+                content: infowindowContent
             });
 
             allLocationsInfowindows.push(infowindow);
@@ -84,6 +92,13 @@
             allLocationsInfowindows.forEach(function(infowindow) {
                 infowindow.close();
             });
+        }
+
+        function deleteLocation(label) {
+            // Set the label value in the hidden input field
+            document.getElementById('deleteLocationLabel').value = label;
+            // Submit the form
+            document.getElementById('deleteLocationForm').submit();
         }
 
         $(document).ready(function() {
@@ -145,10 +160,24 @@
                 url: 'save_marker.php',
                 data: {latitude: latitude, longitude: longitude, description: description},
                 success: function(response) {
-                    console.log('Marker location and description saved');
+                    // Display a success message using SweetAlert
+                    swal({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Marker location and description saved',
+                    });
+                },
+                error: function(xhr, status, error) {
+                    // Display an error message using SweetAlert
+                    swal({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to save marker location and description',
+                    });
                 }
             });
         }
+
     </script>
 </div>
 <?php include_once 'footer.php'?>
