@@ -31,7 +31,7 @@
       <!-- Sidebar scroll-->
       <div>
         <div class="brand-logo d-flex align-items-center justify-content-between">
-          <a href="index.html" class="text-nowrap logo-img">
+          <a href="index.php" class="text-nowrap logo-img">
             <img src="assets/images/logos/logo_sec.png" width="50" alt="" />
           </a>
           <div class="close-btn d-xl-none d-block sidebartoggler cursor-pointer" id="sidebarCollapse">
@@ -55,6 +55,14 @@
                   <i class="ti ti-map-pin"></i>
                 </span>
                 <span class="hide-menu">Locations</span>
+              </a>
+            </li>
+            <li class="sidebar-item">
+              <a class="sidebar-link" href="buildings.php" aria-expanded="false">
+                <span>
+                  <i class="ti ti-building"></i>
+                </span>
+                <span class="hide-menu">Buildings</span>
               </a>
             </li>
           </ul>

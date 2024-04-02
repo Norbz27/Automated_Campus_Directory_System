@@ -9,7 +9,7 @@
     <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAm4XE_BJt3LlMcvJi1erXZcY7Ln8xA-qg&callback=initMap"></script>
     <style>
         #map {
-            height: 400px;
+            height: 500px;
             width: 100%;
         }
     </style>
@@ -59,7 +59,8 @@
                         option.value = location.label;
                         option.textContent = location.label;
                         option.setAttribute('data-lat', location.latitude); // Add latitude as data attribute
-                        option.setAttribute('data-lng', location.longitude); // Add longitude as data attribute
+                        option.setAttribute('data-lng', location.longitude);
+                        option.setAttribute('data-img', location.location_image); // Add longitude as data attribute
                         dropdown.appendChild(option);
                     });
                 }
@@ -70,13 +71,14 @@
             var selectedOption = document.getElementById('locations-dropdown').options[document.getElementById('locations-dropdown').selectedIndex];
             var destinationLat = parseFloat(selectedOption.getAttribute('data-lat'));
             var destinationLng = parseFloat(selectedOption.getAttribute('data-lng'));
+            var destinationImg = selectedOption.getAttribute('data-img');
 
             if (!isNaN(destinationLat) && !isNaN(destinationLng)) {
                 var destination = { lat: destinationLat, lng: destinationLng };
 
                 // Initialize the map centered on the selected location
                 map = new google.maps.Map(document.getElementById('map'), {
-                    zoom: 15,
+                    zoom: 20,
                     center: destination
                 });
 
@@ -86,6 +88,25 @@
                     map: map,
                     title: selectedOption.value
                 });
+
+                // Display location information
+                var infowindowContent = '<center><h3><strong>' + selectedOption.value + '</strong></h3></center>';
+
+                // Check if location image exists
+                if (destinationImg !== null && destinationImg !== '') {
+                    infowindowContent += '<center><img src="admin/assets/images/' + destinationImg + '" alt="Location Image" style="max-width: 200px; max-height: 200px; margin-bottom: 15px; border-radius: 5px"></center>';
+                }
+
+                var infowindow = new google.maps.InfoWindow({
+                    content: infowindowContent,
+                    disableAutoPan: true // Prevent auto panning
+                });
+
+                // Open infowindow when marker is clicked
+                marker.addListener('click', function() {
+                    infowindow.open(map, marker);
+                });
+
             } else {
                 showError('Invalid coordinates for the selected location.');
             }

@@ -73,7 +73,13 @@
                 map: allLocationsMap
             });
 
-            var infowindowContent = '<center><h4><strong>' + location.label + '</strong></h4></center>';
+            var infowindowContent = '<center><h5><strong>' + location.label + '</strong></h5></center>';
+            
+            // Check if location image exists
+            if (location.location_image !== null && location.location_image !== '') {
+                infowindowContent += '<center><img src="assets/images/' + location.location_image + '" alt="Location Image" style="max-width: 200px; max-height: 200px; margin-bottom: 15px; border-radius: 5px"></center>';
+            }
+            
             infowindowContent += '<center><button class="btn btn-primary btn-sm" onclick="deleteLocation(\'' + location.label + '\')">Delete Location</button></center>';
 
             var infowindow = new google.maps.InfoWindow({
@@ -87,6 +93,7 @@
                 infowindow.open(allLocationsMap, marker);
             });
         }
+
 
         function closeAllInfowindows() {
             allLocationsInfowindows.forEach(function(infowindow) {
@@ -140,32 +147,51 @@
             // Show input field for description when marker is clicked
             google.maps.event.addListener(marker, 'click', function() {
                 var content = '<p>Set a Label:</p> <input type="text" class="form-control" id="markerDescription">';
+                content += '<p class="mt-3">Upload Image:</p> <input type="file" class="form-control-file" id="locationImage" accept="image/*">';
                 infowindow.setContent(content);
                 infowindow.open(map, marker);
             });
-
-            // Save the marker location using AJAX or any other method
-            // Note: The description is not saved here, as it's collected in the saveMarker function
-            saveMarkerLocation(location.lat(), location.lng());
         }
 
         function saveMarker() {
             var description = document.getElementById('markerDescription').value;
+            var locationImageInput = document.getElementById('locationImage');
+            var locationImage = locationImageInput.files[0]; // Get the file object
             var latitude = marker.getPosition().lat();
             var longitude = marker.getPosition().lng();
+            
+            // Create a FormData object to send both text and file data
+            var formData = new FormData();
+            formData.append('latitude', latitude);
+            formData.append('longitude', longitude);
+            formData.append('description', description);
+            formData.append('locationImage', locationImage); // Append the file object
             
             // Send an AJAX request to a PHP script to save the marker location and description
             $.ajax({
                 type: 'POST',
                 url: 'save_marker.php',
-                data: {latitude: latitude, longitude: longitude, description: description},
+                data: formData,
+                contentType: false, // Set contentType to false when sending FormData
+                processData: false, // Set processData to false when sending FormData
                 success: function(response) {
-                    // Display a success message using SweetAlert
-                    swal({
-                        icon: 'success',
-                        title: 'Success',
-                        text: 'Marker location and description saved',
-                    });
+                    // Parse the JSON response
+                    var data = JSON.parse(response);
+                    if (data.status === 'success') {
+                        // Display a success message using SweetAlert
+                        swal({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'Marker location and description saved',
+                        });
+                    } else {
+                        // Display an error message using SweetAlert
+                        swal({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message,
+                        });
+                    }
                 },
                 error: function(xhr, status, error) {
                     // Display an error message using SweetAlert
