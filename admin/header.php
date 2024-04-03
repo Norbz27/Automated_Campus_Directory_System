@@ -54,7 +54,7 @@
                 <span>
                   <i class="ti ti-map-pin"></i>
                 </span>
-                <span class="hide-menu">Locations</span>
+                <span class="hide-menu">Specific Locations</span>
               </a>
             </li>
             <li class="sidebar-item">
@@ -62,7 +62,7 @@
                 <span>
                   <i class="ti ti-building"></i>
                 </span>
-                <span class="hide-menu">Buildings</span>
+                <span class="hide-menu">Building Locations</span>
               </a>
             </li>
           </ul>
