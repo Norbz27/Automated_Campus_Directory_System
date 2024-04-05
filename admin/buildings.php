@@ -158,10 +158,33 @@
 
             // Add an image layer to the map
             var floorImage = L.imageOverlay(imageUrl, [[-80, -160], [80, 160]]).addTo(floorMap);
-
-            // Add a marker to the map
-            const marker = L.marker([50, 0]).addTo(floorMap);
         }
+        /** Adding location for floor
+         var floorMap;
+        var recentMarker;
+
+        function initializeViewFloorMap(imageUrl) {
+            if (floorMap) {
+                floorMap.remove();
+            }
+
+            floorMap = L.map('floorImageContainer').setView([0, 0], 1);
+
+            // Add an image layer to the map
+            var floorImage = L.imageOverlay(imageUrl, [[-80, -160], [80, 160]]).addTo(floorMap);
+
+            // Add a click event listener to the map
+            floorMap.on('click', function(e) {
+                if (recentMarker) {
+                    floorMap.removeLayer(recentMarker);
+                }
+
+                // Add a marker at the clicked location
+                recentMarker = L.marker(e.latlng).addTo(floorMap);
+            });
+        }
+        **/
+         
 
         function displayFloorImage(floorId) {
             var floorImageContainer = document.getElementById('floorImageContainer');
