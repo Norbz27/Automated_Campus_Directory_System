@@ -103,6 +103,23 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="addroom" data-toggle="modal" data-target="#addRoomModal" disabled>New Room</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addRoomModal" tabindex="-1" role="dialog" aria-labelledby="addRoomModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewFloorModalLabel">New Room Location</h5>
+            </div>
+            <div class="modal-body">
+                <div id="floorImageContainerAdd" style="width: 100%; height: 500px;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -146,7 +163,7 @@
                 }
             });
         }
-        /**
+        
         var floorMap;
 
         function initializeViewFloorMap(imageUrl) {
@@ -154,56 +171,13 @@
                 floorMap.remove();
             }
 
-            floorMap = L.map('floorImageContainer').setView([0, 0], 1);
+            floorMap = L.map('floorImageContainer').setView([0, 0], 1.5);
 
             // Add an image layer to the map
             var floorImage = L.imageOverlay(imageUrl, [[-80, -160], [80, 160]]).addTo(floorMap);
         }
-        **/
-         var floorMap;
-        var recentMarker;
 
-        function initializeViewFloorMap(imageUrl) {
-            if (floorMap) {
-                floorMap.remove();
-            }
-
-            floorMap = L.map('floorImageContainer').setView([0, 0], 1);
-
-            // Add an image layer to the map
-            var floorImage = L.imageOverlay(imageUrl, [[-80, -160], [80, 160]]).addTo(floorMap);
-
-            // Add a click event listener to the map
-            floorMap.on('click', function(e) {
-                if (recentMarker) {
-                    floorMap.removeLayer(recentMarker);
-                }
-
-                // Add a marker at the clicked location
-                recentMarker = L.marker(e.latlng).addTo(floorMap);
-
-                // Create a popup with an input text field
-                var inputPopup = L.popup().setContent(`
-                    <strong><label class="mb-1" for="markerTextInput">Set a Label:</label></strong>
-                    <input class="form-control" style="width:200px" type="text" id="markerTextInput">
-                    <button type="button" class="btn btn-primary mt-4" style="width:100%" id="submitLabel">Submit</button>
-                `);
-                // Attach the popup to the marker
-                recentMarker.bindPopup(inputPopup).openPopup();
-
-                // Add an event listener to handle marker click
-                recentMarker.on('click', function(e) {
-                    // Prevent map click event propagation
-                    L.DomEvent.stopPropagation(e);
-                });
-            });
-        }
-        
-         
-
-        function displayFloorImage(floorId) {
-            var floorImageContainer = document.getElementById('floorImageContainer');
-            
+        function displayFloorImage(floorId) {     
             // Send the selected floor ID in the request body of a POST request
             $.ajax({
                 type: 'POST',
@@ -221,9 +195,84 @@
             });
         }
 
-        $('#viewFloorModal').on('shown.bs.modal', function () {
+        var floorMap2;
+        var recentMarker;
+
+        function initializeViewFloorMapAdd(imageUrl) {
+            if (floorMap2) {
+                floorMap2.remove();
+            }
+
+            floorMap2 = L.map('floorImageContainerAdd').setView([0, 0], 1.5);
+
+            // Add an image layer to the map
+            var floorImage = L.imageOverlay(imageUrl, [[-80, -160], [80, 160]]).addTo(floorMap2);
+
+            // Add a click event listener to the map
+            floorMap2.on('click', function(e) {
+                if (recentMarker) {
+                    floorMap2.removeLayer(recentMarker);
+                }
+
+                // Add a marker at the clicked location
+                recentMarker = L.marker(e.latlng).addTo(floorMap2);
+
+                // Create a popup with an input text field
+                var inputPopup = L.popup().setContent('<strong><p>Set a Label:</p></strong><input class="form-control" style="width:200px" type="text" id="markerTextInput">');
+                // Attach the popup to the marker
+                recentMarker.bindPopup(inputPopup).openPopup();
+
+                // Add an event listener to handle marker click
+                recentMarker.on('click', function(e) {
+                    // Prevent map click event propagation
+                    L.DomEvent.stopPropagation(e);
+                });
+            });
+        }
+
+         
+        function displayFloorImageAdd(floorId) {  
+            // Send the selected floor ID in the request body of a POST request
+            $.ajax({
+                type: 'POST',
+                url: 'get_floor_image.php',
+                data: { floor_id: floorId },
+                dataType: 'text', // Specify expected data type as text (the image URL)
+                success: function(imageUrl) {
+                    initializeViewFloorMapAdd(imageUrl);
+                },
+                error: function(xhr, status, error) {
+                    // Handle error
+                    console.error('AJAX error:', status, error);
+                    console.log(xhr.responseText); // Log the response for debugging
+                }
+            });
+        }
+
+        //$('#viewFloorModal').on('shown.bs.modal', function () {
             
+        //});
+       $('#addRoomModal').on('shown.bs.modal', function() {
+            var floorDropdown = document.getElementById('floorDropdown');
+            var selectedFloorId = floorDropdown.value;
+            displayFloorImageAdd(selectedFloorId);
+
+            // Trigger map resize event after the modal is shown
+            setTimeout(function() {
+                floorMap2.invalidateSize();
+            }, 100);
+            
+            // Clear the existing markers and overlays on the map
+            if (floorMap2 && floorMap2.hasLayer) {
+                floorMap2.eachLayer(function(layer) {
+                    if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
+                        floorMap2.removeLayer(layer);
+                    }
+                });
+            }
         });
+
+
         $('#viewFloorModal').on('show.bs.modal', function(event) {
             var button = $(event.relatedTarget);
             var buildingId = button.data('building-id');
@@ -235,15 +284,8 @@
 
             // Clear the first option "Choose a floor"
             $('#floorDropdown option:contains("Choose a floor")').remove();
-
+            document.getElementById('addroom').disabled = false;
             displayFloorImage(selectedFloorId);
-
-            // Clear the existing markers and overlays on the map
-            floorMap.eachLayer(function(layer) {
-                if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
-                    floorMap.removeLayer(layer);
-                }
-            });
         });
 
     </script>
