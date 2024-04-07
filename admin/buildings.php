@@ -375,24 +375,6 @@
             });
         }
 
-        function refreshMap() {
-            // Clear the existing markers and overlays on the map
-            floorMap.eachLayer(function(layer) {
-                if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
-                    floorMap.removeLayer(layer);
-                }
-            });
-
-            // Get the selected floor ID
-            var selectedFloorId = $('#floorDropdown').val();
-
-            // Clear the first option "Choose a floor"
-            $('#floorDropdown option:contains("Choose a floor")').remove();
-
-            // Display the floor image for the selected floor
-            displayFloorImage(selectedFloorId);
-        }
-
 </script>
   <script>
           
