@@ -251,11 +251,11 @@
                     response.forEach(function(room) {
                         var roomLatLng = L.latLng(room.latitude, room.longitude);
                         var roomMarker = L.marker(roomLatLng).addTo(floorMap);
-                        
+
                         var popupContent = '<center><h5><strong>' + room.room_name + '</strong></h5></center><br>';
-                        popupContent += '<img src="assets/images' + room.room_image + '" alt="' + room.room_name + '" style="max-width: 200px; max-height: 200px; margin-bottom: 15px; border-radius: 5px">';
+                        popupContent += '<img src="assets/images/' + room.room_image + '" alt="' + room.room_name + '" style="max-width: 200px; max-height: 200px; margin-bottom: 15px; border-radius: 5px">';
+                        popupContent += '<center><button class="btn btn-primary btn-sm" onclick="deleteRoom(' + room.room_id + ', ' + room.floor_id + ')">Delete Location</button></center>';
                         roomMarker.bindPopup(popupContent);
-                        
                     });
                 },
                 error: function(xhr, status, error) {
@@ -265,6 +265,60 @@
                 }
             });
         }
+
+        function deleteRoom(roomId, floorId) {
+            // Display a confirmation dialog using SweetAlert
+            swal({
+                title: "Are you sure?",
+                text: "Once deleted, you will not be able to recover this room!",
+                icon: "warning",
+                buttons: true,
+                dangerMode: true,
+            })
+            .then((willDelete) => {
+                if (willDelete) {
+                    // Make an AJAX call to delete the room
+                    $.ajax({
+                        type: 'POST',
+                        url: 'delete_room.php', // Change to the actual PHP script that deletes the room
+                        data: { room_id: roomId }, // Pass room_id as data
+                        dataType: 'json',
+                        success: function(response) {
+                            if (response.status === 'success') {
+                                // Display a success message using SweetAlert
+                                swal({
+                                    icon: 'success',
+                                    title: 'Success',
+                                    text: 'Room has been deleted.',
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        // Refresh the map
+                                        displaySavedRooms(floorId);
+                                    }
+                                });
+                                displaySavedRooms(floorId);
+                            } else {
+                                // Display an error message using SweetAlert
+                                swal({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: response.message,
+                                });
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            // Handle error
+                            console.error('AJAX error:', status, error);
+                            console.log(xhr.responseText); // Log the response for debugging
+                        }
+                    });
+                } else {
+                    // User clicked the cancel button, do nothing
+                }
+            });
+        }
+
+
 
         function submitRoom() {
             // Retrieve input values
@@ -300,9 +354,10 @@
                         }).then((result) => {
                             if (result.isConfirmed) {
                                 // Refresh the map
-                                refreshMap();
+                                displaySavedRooms(floorId);
                             }
                         });
+                        displaySavedRooms(floorId);
                     } else {
                         // Display an error message using SweetAlert
                         swal({

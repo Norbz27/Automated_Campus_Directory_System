@@ -12,7 +12,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $floorId = $_POST['floor_id'];
         
         // Process and move uploaded image file
-        $targetDir = "assets/images"; // Specify the directory where you want to save uploaded images
+        $targetDir = "assets/images/"; // Specify the directory where you want to save uploaded images
         $targetFile = $targetDir . basename($_FILES["room_image"]["name"]);
         
         if (move_uploaded_file($_FILES["room_image"]["tmp_name"], $targetFile)) {
