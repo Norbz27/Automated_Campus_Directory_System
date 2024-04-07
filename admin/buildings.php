@@ -107,6 +107,8 @@
         </div>
     </div>
 </div>
+
+
 <script>
        function populateFloorDropdown() {
             var buildingId = $(this).data('building-id');
@@ -146,20 +148,6 @@
                 }
             });
         }
-        /**
-        var floorMap;
-
-        function initializeViewFloorMap(imageUrl) {
-            if (floorMap) {
-                floorMap.remove();
-            }
-
-            floorMap = L.map('floorImageContainer').setView([0, 0], 1);
-
-            // Add an image layer to the map
-            var floorImage = L.imageOverlay(imageUrl, [[-80, -160], [80, 160]]).addTo(floorMap);
-        }
-        **/
          var floorMap;
         var recentMarker;
 
@@ -185,8 +173,9 @@
                 // Create a popup with an input text field
                 var inputPopup = L.popup().setContent(`
                     <strong><label class="mb-1" for="markerTextInput">Set a Label:</label></strong>
-                    <input class="form-control" style="width:200px" type="text" id="markerTextInput">
-                    <button type="button" class="btn btn-primary mt-4" style="width:100%" id="submitLabel">Submit</button>
+                    <input class="form-control" style="width:100%" type="text" id="markerTextInput">
+                    <label class="mt-3 mb-1" for="roomImage">Upload Image:</label> <input type="file" class="form-control-file" id="roomImage" accept="image/*">
+                    <button type="button" class="btn btn-primary mt-4" style="width:100%" id="submitLabel" onclick="submitRoom()">Submit</button>
                 `);
                 // Attach the popup to the marker
                 recentMarker.bindPopup(inputPopup).openPopup();
@@ -196,10 +185,14 @@
                     // Prevent map click event propagation
                     L.DomEvent.stopPropagation(e);
                 });
+
+                // Add an event listener to the popup close event
+                recentMarker.getPopup().on('remove', function() {
+                    floorMap.removeLayer(recentMarker); // Remove the marker when the popup is closed
+                });
             });
         }
-        
-         
+
 
         function displayFloorImage(floorId) {
             var floorImageContainer = document.getElementById('floorImageContainer');
@@ -237,7 +230,7 @@
             $('#floorDropdown option:contains("Choose a floor")').remove();
 
             displayFloorImage(selectedFloorId);
-
+            displaySavedRooms(selectedFloorId);
             // Clear the existing markers and overlays on the map
             floorMap.eachLayer(function(layer) {
                 if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
@@ -246,7 +239,106 @@
             });
         });
 
-    </script>
+        function displaySavedRooms(floorId) {
+            // Make an AJAX call to fetch saved room locations from the database
+            $.ajax({
+                type: 'POST',
+                url: 'get_all_rooms.php', // Change to the actual PHP script that fetches room data from the database
+                data: { floor_id: floorId }, // Pass floor_id as data
+                dataType: 'json',
+                success: function(response) {
+                    // Iterate through the response data and add markers for each saved room location
+                    response.forEach(function(room) {
+                        var roomLatLng = L.latLng(room.latitude, room.longitude);
+                        var roomMarker = L.marker(roomLatLng).addTo(floorMap);
+                        
+                        var popupContent = '<center><h5><strong>' + room.room_name + '</strong></h5></center><br>';
+                        popupContent += '<img src="assets/images' + room.room_image + '" alt="' + room.room_name + '" style="max-width: 200px; max-height: 200px; margin-bottom: 15px; border-radius: 5px">';
+                        roomMarker.bindPopup(popupContent);
+                        
+                    });
+                },
+                error: function(xhr, status, error) {
+                    // Handle error
+                    console.error('AJAX error:', status, error);
+                    console.log(xhr.responseText); // Log the response for debugging
+                }
+            });
+        }
+
+        function submitRoom() {
+            // Retrieve input values
+            var roomName = $('#markerTextInput').val();
+            var longitude = recentMarker.getLatLng().lng;
+            var latitude = recentMarker.getLatLng().lat;
+            var roomImage = $('#roomImage')[0].files[0];
+            var floorId = $('#floorDropdown').val();
+
+            // Create a FormData object to send file data
+            var formData = new FormData();
+            formData.append('room_name', roomName);
+            formData.append('longitude', longitude);
+            formData.append('latitude', latitude);
+            formData.append('room_image', roomImage);
+            formData.append('floor_id', floorId);
+
+            // Send data to PHP script
+            $.ajax({
+                type: 'POST',
+                url: 'save_room.php',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    var data = JSON.parse(response);
+                    if (data.status === 'success') {
+                        // Display a success message using SweetAlert
+                        swal({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'Room location and description saved',
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                // Refresh the map
+                                refreshMap();
+                            }
+                        });
+                    } else {
+                        // Display an error message using SweetAlert
+                        swal({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message,
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    // Handle error
+                    console.error('AJAX error:', status, error);
+                    console.log(xhr.responseText); // Log the response for debugging
+                }
+            });
+        }
+
+        function refreshMap() {
+            // Clear the existing markers and overlays on the map
+            floorMap.eachLayer(function(layer) {
+                if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
+                    floorMap.removeLayer(layer);
+                }
+            });
+
+            // Get the selected floor ID
+            var selectedFloorId = $('#floorDropdown').val();
+
+            // Clear the first option "Choose a floor"
+            $('#floorDropdown option:contains("Choose a floor")').remove();
+
+            // Display the floor image for the selected floor
+            displayFloorImage(selectedFloorId);
+        }
+
+</script>
   <script>
           
           $('#mapModal').on('shown.bs.modal', function () {
@@ -273,7 +365,7 @@
             marker = new google.maps.Marker({
                 position: location, 
                 map: map
-});
+            });
 
             // Show input field for description when marker is clicked
             google.maps.event.addListener(marker, 'click', function() {
@@ -309,6 +401,56 @@
                     var locations = JSON.parse(response);
                     locations.forEach(function(location) {
                         addMarker(location);
+                    });
+                }
+            });
+        }
+        function saveMarker() {
+            var description = document.getElementById('markerDescription').value;
+            var locationImageInput = document.getElementById('locationImage');
+            var locationImage = locationImageInput.files[0]; // Get the file object
+            var latitude = marker.getPosition().lat();
+            var longitude = marker.getPosition().lng();
+            
+            // Create a FormData object to send both text and file data
+            var formData = new FormData();
+            formData.append('latitude', latitude);
+            formData.append('longitude', longitude);
+            formData.append('description', description);
+            formData.append('locationImage', locationImage); // Append the file object
+            
+            // Send an AJAX request to a PHP script to save the marker location and description
+            $.ajax({
+                type: 'POST',
+                url: 'save_marker_building.php',
+                data: formData,
+                contentType: false, // Set contentType to false when sending FormData
+                processData: false, // Set processData to false when sending FormData
+                success: function(response) {
+                    // Parse the JSON response
+                    var data = JSON.parse(response);
+                    if (data.status === 'success') {
+                        // Display a success message using SweetAlert
+                        swal({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'Building location and description saved',
+                        });
+                    } else {
+                        // Display an error message using SweetAlert
+                        swal({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message,
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    // Display an error message using SweetAlert
+                    swal({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to save marker location and description',
                     });
                 }
             });
