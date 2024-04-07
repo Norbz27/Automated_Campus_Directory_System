@@ -85,7 +85,6 @@
     <form id="deleteLocationForm" method="post" action="delete_location_building.php">
         <input type="hidden" id="deleteLocationLabel" name="label" value="">
     </form>
-<button class="btn btn-info btn-sm" title="View" data-toggle="modal" data-target="#viewFloorModal">Show</button>
   <!-- Modal for viewing floors -->
 <div class="modal fade" id="viewFloorModal" tabindex="-1" role="dialog" aria-labelledby="viewFloorModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
