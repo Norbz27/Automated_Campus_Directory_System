@@ -64,7 +64,7 @@ p {
     margin-bottom: 30px;
 }
 
-.btn {
+.getstartedbtn {
     display: inline-block;
     padding: 10px 20px;
     background-color: #d9534f; /* Red color */
@@ -74,48 +74,40 @@ p {
     transition: background-color 0.3s ease;
 }
 
-.btn:hover {
+.getstartedbtn:hover {
     background-color: #c9302c; /* Darker red color on hover */
 }
 
 /* Styles for navigation input page */
 .navigation-page-container {
-    max-width: 800px;
+    max-width: 900px;
     margin: 70px auto; /* Adjust the auto value to center horizontally */
-    padding: 30px;
+    padding: 20px 30px 30px 30px;
     background-color: #fff;
     border-radius: 10px;
     box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
-    text-align: center;
     color: #333;
-
-    position: relative;
 
     top: 100px;
     bottom: 40px;
 }
-
+.form-con{
+    text-align: center;
+}
 /* Additional styles for navigation input form, dropdown, etc. */
 .navigation-page-container form {
     margin-top: 20px;
 }
 
 .navigation-page-container select {
-    padding: 10px;
+    padding: 7px;
     margin: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
 }
 
-.navigation-page-container input[type="text"] {
-    padding: 10px;
-    margin: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-}
-
-.navigation-page-container button {
-    padding: 10px 20px;
+.form-con button {
+    padding: 7px 20px;
     background-color: #d9534f;
     color: #fff;
     border: none;
@@ -124,6 +116,6 @@ p {
     transition: background-color 0.3s ease;
 }
 
-.navigation-page-container button:hover {
+.form-con button:hover {
     background-color: #c9302c;
 }

@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Navigation Input Page</title>
-    <link rel="stylesheet" href="style.css">
+ 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler-flags.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler-payments.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler-vendors.min.css">
@@ -16,22 +17,31 @@
             width: 100%;
         }
     </style>
+       <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<button class="btn btn-success btn-sm" title="Add Floors" data-toggle="modal" data-target="#addFloorModal"><i class="ti ti-stairs"></i></button>
     <div class="navigation-page-container">
-        <h1>Navigation Input</h1>
-        <div class="navigation-page">
-            <h2>Select a Location:</h2>
-            <select id="locations-dropdown">
-                <option value="">Select a Location</option>
-                <!-- Dropdown options will be populated dynamically -->
-            </select>
-            <button onclick="showSelectedLocation()">Show Location</button>
-            <button onclick="calculateAndDisplayDirections()">Get Directions</button>
-            <p id="error-message" style="color: red;"></p>
+        <div class="row justify-content-end mb-3">
+            <div class="col-auto">
+                <a class="btn btn-none float-right" href="room_navigation.php">
+                        Buildings <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-narrow-right"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l14 0" /><path d="M15 16l4 -4" /><path d="M15 8l4 4" /></svg>
+                </a>
+            </div>
         </div>
-        <div id="map"></div>
+        <div class="form-con">
+            <h3><b>Navigation Input</b></h3>
+            <div class="navigation-page">
+                <h5>Select a Location:</h5>
+                <select id="locations-dropdown">
+                    <option value="">Select a Location</option>
+                    <!-- Dropdown options will be populated dynamically -->
+                </select>
+                <button onclick="showSelectedLocation()">Show Location</button>
+                <button onclick="calculateAndDisplayDirections()">Get Directions</button>
+                <p id="error-message" style="color: red;"></p>
+            </div>
+            <div id="map"></div>
+        </div>
     </div>
 
     <script>
@@ -72,6 +82,7 @@
         }
 
         function showSelectedLocation() {
+            showError('');
             var selectedOption = document.getElementById('locations-dropdown').options[document.getElementById('locations-dropdown').selectedIndex];
             var destinationLat = parseFloat(selectedOption.getAttribute('data-lat'));
             var destinationLng = parseFloat(selectedOption.getAttribute('data-lng'));
@@ -117,6 +128,7 @@
         }
 
         function calculateAndDisplayDirections() {
+            showError('');
             var selectedOption = document.getElementById('locations-dropdown').options[document.getElementById('locations-dropdown').selectedIndex];
             var destinationLat = parseFloat(selectedOption.getAttribute('data-lat'));
             var destinationLng = parseFloat(selectedOption.getAttribute('data-lng'));
@@ -197,4 +209,7 @@
         showNavigationPage();
     </script>
 </body>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 </html>

@@ -19,7 +19,7 @@
         
         <h1>Welcome to the Automated Campus Directory System</h1>
         <p>Find your way around campus with ease. Our system provides a comprehensive directory of campus buildings, departments, and rooms.</p>
-        <button id="getStartedBtn" class="btn">Get Started</button>
+        <button id="getStartedBtn" class="getstartedbtn">Get Started</button>
     </div>
 
     <script src="script.js"></script>
