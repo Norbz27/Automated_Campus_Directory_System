@@ -2,7 +2,7 @@
 include_once 'db_con/db.php'; // Include your database connection file
 
 // Select all locations from the tbl_locations table
-$sql = "SELECT * FROM tbl_locations";
+$sql = "SELECT * FROM tbl_locations ORDER BY label ASC";
 $result = $conn->query($sql);
 
 // Check if any locations are found

@@ -21,6 +21,19 @@
           background-color: #e61515;
       }
  </style>
+ <?php
+session_start();
+
+// Check if the user is logged in
+if (!isset($_SESSION['account_id'])) {
+    // Redirect to login page or display an error message
+    header("Location: login.php");
+    exit;
+}
+
+// Continue with your code for the logged-in user
+?>
+
 </head>
 
 <body>
@@ -98,7 +111,7 @@
                       <i class="ti ti-user fs-6"></i>
                       <p class="mb-0 fs-3">Profile</p>
                     </a>
-                    <a href="./authentication-login.html" class="btn btn-outline-primary mx-3 mt-2 d-block">Logout</a>
+                    <a href="logout.php" class="btn btn-outline-primary mx-3 mt-2 d-block">Logout</a>
                   </div>
                 </div>
               </li>

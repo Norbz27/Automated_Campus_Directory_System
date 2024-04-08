@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Navigation Input Page</title>
- 
+    <link rel="shortcut icon" type="image/png" href="admin/assets/images/logos/logo_sec.png" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler-flags.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler-payments.min.css">
@@ -18,6 +18,7 @@
         }
     </style>
        <link rel="stylesheet" href="style.css">
+       <link rel="stylesheet" href="admin/assets/css/styles.min.css" />
 </head>
 <body>
     <div class="navigation-page-container">
@@ -29,15 +30,15 @@
             </div>
         </div>
         <div class="form-con">
-            <h3><b>Navigation Input</b></h3>
+            <h3><b>Specific Location Navigation</b></h3>
             <div class="navigation-page">
                 <h5>Select a Location:</h5>
                 <select id="locations-dropdown">
                     <option value="">Select a Location</option>
                     <!-- Dropdown options will be populated dynamically -->
                 </select>
-                <button onclick="showSelectedLocation()">Show Location</button>
-                <button onclick="calculateAndDisplayDirections()">Get Directions</button>
+                <button class="btn btn-primary mr-2" onclick="showSelectedLocation()">Show Location</button>
+                <button class="btn btn-primary" onclick="calculateAndDisplayDirections()">Get Directions</button>
                 <p id="error-message" style="color: red;"></p>
             </div>
             <div id="map"></div>
@@ -105,7 +106,7 @@
                 });
 
                 // Display location information
-                var infowindowContent = '<center><h3><strong>' + selectedOption.value + '</strong></h3></center>';
+                var infowindowContent = '<center><h5><strong>' + selectedOption.value + '</strong></h5></center>';
 
                 // Check if location image exists
                 if (destinationImg !== null && destinationImg !== '') {
@@ -116,7 +117,7 @@
                     content: infowindowContent,
                     disableAutoPan: true // Prevent auto panning
                 });
-
+                infowindow.open(map, marker);
                 // Open infowindow when marker is clicked
                 marker.addListener('click', function() {
                     infowindow.open(map, marker);
@@ -132,9 +133,12 @@
             var selectedOption = document.getElementById('locations-dropdown').options[document.getElementById('locations-dropdown').selectedIndex];
             var destinationLat = parseFloat(selectedOption.getAttribute('data-lat'));
             var destinationLng = parseFloat(selectedOption.getAttribute('data-lng'));
+            var destinationLatsec = 9.779989735396782;
+            var destinationLngsec = 125.48450870433072;
 
             if (!isNaN(destinationLat) && !isNaN(destinationLng)) {
                 var destination = { lat: destinationLat, lng: destinationLng };
+                var destinationsec = { lat: destinationLatsec, lng: destinationLngsec };
 
                 // Get user's current location
                 if (navigator.geolocation) {
@@ -142,6 +146,8 @@
                         var origin = {
                             lat: position.coords.latitude,
                             lng: position.coords.longitude
+                            //lat: 9.780439075488488,
+                            //lng: 125.48305766117328
                         };
 
                         // Initialize the map centered on the user's location
@@ -164,6 +170,60 @@
 
                         // Calculate directions between user's location and destination
                         calculateDirections(origin, destination);
+
+                        // Calculate distance and duration of the route
+                        var request = {
+                            origin: origin,
+                            destination: destination,
+                            travelMode: 'DRIVING',
+                            avoidHighways: true
+                        };
+
+                        directionsService.route(request, function(result, status) {
+                            if (status == 'OK') {
+                                var distance = result.routes[0].legs[0].distance.text;
+                                var duration = result.routes[0].legs[0].duration.text;
+
+                                // Add a marker at the destination
+                                var destinationMarker = new google.maps.Marker({
+                                    position: destination,
+                                    map: map,
+                                    title: selectedOption.value
+                                });
+
+                                // Display location information
+                                var destinationImg = selectedOption.getAttribute('data-img');
+                                var infowindowContent = '<center><h5><strong>' + selectedOption.value + '</strong></h5></center>';
+
+                                // Check if location image exists
+                                if (destinationImg !== null && destinationImg !== '') {
+                                    infowindowContent += '<center><img src="admin/assets/images/' + destinationImg + '" alt="Location Image" style="max-width: 200px; max-height: 200px; margin-bottom: 15px; border-radius: 5px"></center>';
+                                }
+
+                                // Create infowindow
+                                var infowindow = new google.maps.InfoWindow({
+                                    content: infowindowContent
+                                });
+                                infowindow.open(map, destinationMarker);
+                                // Open infowindow when destination marker is clicked
+                                destinationMarker.addListener('click', function() {
+                                    infowindow.open(map, destinationMarker);
+                                });
+
+                                // Display distance and duration in an information window
+                                var infowindowcalc = new google.maps.InfoWindow({
+                                    content: '<strong>Distance:</strong> ' + distance + '<br><strong>Duration:</strong> ' + duration
+                                });
+
+                                infowindowcalc.open(map, userLocationMarker);
+
+                                userLocationMarker.addListener('click', function() {
+                                    infowindowcalc.open(map, userLocationMarker);
+                                });
+                            } else {
+                                showError('Directions request failed due to ' + status);
+                            }
+                        });
                     }, function() {
                         // Handle geolocation errors
                         handleLocationError(true, map.getCenter());
@@ -176,6 +236,7 @@
                 showError('Invalid coordinates for the selected location.');
             }
         }
+
 
         function calculateDirections(origin, destination) {
             var request = {

@@ -95,7 +95,7 @@
             <div class="modal-body">
                 <label class="mb-1" for="floorDropdown">Select a Floor:</label>
                 <select id="floorDropdown" class="form-control mb-4">
-                    
+
                     <!-- Floor options will be populated here dynamically -->
                 </select>
                 <div id="floorImageContainer" style="width: 100%; height: 400px;"></div>
@@ -253,7 +253,7 @@
 
                         var popupContent = '<center><h5><strong>' + room.room_name + '</strong></h5></center><br>';
                         popupContent += '<img src="assets/images/' + room.room_image + '" alt="' + room.room_name + '" style="max-width: 200px; max-height: 200px; margin-bottom: 15px; border-radius: 5px">';
-                        popupContent += '<center><button class="btn btn-primary btn-sm" onclick="deleteRoom(' + room.room_id + ', ' + room.floor_id + ')">Delete Location</button></center>';
+                        popupContent += '<center><button class="btn btn-primary btn-sm" onclick="deleteRoom(' + room.room_id + ', ' + room.floor_Id + ')">Delete Location</button></center>';
                         roomMarker.bindPopup(popupContent);
                     });
                 },
@@ -273,8 +273,7 @@
                 icon: "warning",
                 buttons: true,
                 dangerMode: true,
-            })
-            .then((willDelete) => {
+            }).then((willDelete) => {
                 if (willDelete) {
                     // Make an AJAX call to delete the room
                     $.ajax({
@@ -295,7 +294,6 @@
                                         displaySavedRooms(floorId);
                                     }
                                 });
-                                displaySavedRooms(floorId);
                             } else {
                                 // Display an error message using SweetAlert
                                 swal({
@@ -316,7 +314,6 @@
                 }
             });
         }
-
 
 
         function submitRoom() {

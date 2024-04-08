@@ -106,7 +106,7 @@ p {
     border-radius: 5px;
 }
 
-.form-con button {
+.btnnavigation {
     padding: 7px 20px;
     background-color: #d9534f;
     color: #fff;
@@ -116,6 +116,6 @@ p {
     transition: background-color 0.3s ease;
 }
 
-.form-con button:hover {
+.btnnavigation:hover {
     background-color: #c9302c;
 }
