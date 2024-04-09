@@ -48,29 +48,29 @@
         }
     </style>
 
-       <link rel="stylesheet" href="style.css">
-       <link rel="stylesheet" href="admin/assets/css/styles.min.css" />
-       <?php include_once 'room_nav_function.php';
-        include_once 'admin/db_con/db.php';
-       // SQL query to retrieve autocomplete data
-       $sql = "SELECT b.label building_label, f.name floor_name, r.room_name FROM tbl_rooms r LEFT JOIN tbl_floors f ON r.floor_id = f.floor_id LEFT JOIN tbl_building b ON f.building_id = b.building_id;";
-       
-       $result = $conn->query($sql);
-       
-       $autocompleteData = array();
-       
-       if ($result->num_rows > 0) {
-           // Fetch associative array of rows
-           while ($row = $result->fetch_assoc()) {
-               // Format the data as needed for autocomplete
-               $autocompleteData[] = $row['building_label'] . ', ' . $row['floor_name'] . ', ' . $row['room_name'];
-           }
-       }
-       
-       // Close database connection
-       $conn->close();
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="admin/assets/css/styles.min.css" />
+    <?php
+    include_once 'admin/db_con/db.php';
+    // SQL query to retrieve autocomplete data
+    $sql = "SELECT r.room_id, f.floor_id, b.label building_label, f.name floor_name, r.room_name FROM tbl_rooms r LEFT JOIN tbl_floors f ON r.floor_id = f.floor_id LEFT JOIN tbl_building b ON f.building_id = b.building_id;";
+    
+    $result = $conn->query($sql);
+    
+    $autocompleteData = array();
+    
+    if ($result->num_rows > 0) {
+        // Fetch associative array of rows
+        while ($row = $result->fetch_assoc()) {
+            // Format the data as needed for autocomplete
+            $autocompleteData[] = $row['room_id'] . ', ' . $row['floor_id'] . ', ' . $row['building_label'] . ', ' . $row['floor_name'] . ', ' . $row['room_name'];
+        }
+    }
+    
+    // Close database connection
+    $conn->close();
 
-       ?>
+    ?>
        
 </head>
 <body>
@@ -82,15 +82,14 @@
                 </a>
             </div>
         </div>
-
         <div class="form-con">
             <h3><b>Buildings Navigation Input</b></h3>
             <div class="navigation-page">
                 <h5>Search a Location:</h5>
                 <div class="form-inline justify-content-center">
-                    <form autocomplete="off" action="/action_page.php">
+                    <form autocomplete="off" action="">
                         <input type="text" id="searchInput" style="width: 300px;" class="form-control mr-2">
-                        <button type="submit" class="btn btn-primary mr-2"><i class="ti ti-location"></i></button>
+                        <button data-toggle="modal" onclick="getRoomID()" data-target="#searchviewFloorModal" class="btn btn-primary mr-2"><i class="ti ti-location"></i></button>
                     </form>
                 </div>
                 <p id="error-message" style="color: red;"></p>
@@ -98,6 +97,7 @@
             <div id="allLocationsMap" style="height: 600px; width: 100%;"></div>
         </div>
     </div>
+    <!-- View All floor -->
     <div class="modal fade" id="viewFloorModal" tabindex="-1" role="dialog" aria-labelledby="viewFloorModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
@@ -117,91 +117,187 @@
             </div>
         </div>
     </div>
+    <!-- View searched floor -->
+    <div class="modal fade" id="searchviewFloorModal" tabindex="-1" role="dialog" aria-labelledby="searchviewFloorModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewFloorModalLabel">Result</h5>
+                </div>
+                <div class="modal-body">
+                    <div id="searchedfloorImageContainer" style="width: 100%; height: 400px;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php include_once 'room_nav_function.php'; ?>
     <script>
-    // PHP variable containing the autocomplete data from the database
-    var autocompleteData = <?php echo json_encode($autocompleteData); ?>;
-
+        var roomID = 0;
+        var floorID = 0;
     // Function to initialize autocomplete
-    function autocomplete(inp, arr) {
-        var currentFocus;
+        function autocomplete(inp, arr) {
+            var currentFocus;
 
-        inp.addEventListener("input", function(e) {
-            var val = this.value;
-            closeAllLists();
-            if (!val) { return false;}
-            currentFocus = -1;
-            var a = document.createElement("DIV");
-            a.setAttribute("id", this.id + "autocomplete-list");
-            a.setAttribute("class", "autocomplete-items");
-            this.parentNode.appendChild(a);
-            for (var i = 0; i < arr.length; i++) {
-                // Check if the input text is contained in any part of the autocomplete data
-                var autoCompleteItem = arr[i];
-                if (autoCompleteItem.toUpperCase().includes(val.toUpperCase())) {
-                    var b = document.createElement("DIV");
-                    var startIndex = autoCompleteItem.toUpperCase().indexOf(val.toUpperCase());
-                    var matchingText = autoCompleteItem.substr(startIndex, val.length);
-                    var restOfText = autoCompleteItem.substr(startIndex + val.length);
-                    b.innerHTML = autoCompleteItem.substr(0, startIndex) + "<strong>" + matchingText + "</strong>" + restOfText;
-                    b.innerHTML += "<input type='hidden' value='" + autoCompleteItem + "'>";
-                    b.addEventListener("click", function(e) {
-                        inp.value = this.getElementsByTagName("input")[0].value;
-                        closeAllLists();
+            inp.addEventListener("input", function(e) {
+                var val = this.value;
+                closeAllLists();
+                if (!val) { return false;}
+                currentFocus = -1;
+                var a = document.createElement("DIV");
+                a.setAttribute("id", this.id + "autocomplete-list");
+                a.setAttribute("class", "autocomplete-items");
+                this.parentNode.appendChild(a);
+                for (var i = 0; i < arr.length; i++) {
+                    var data = arr[i].split(',');
+                    var room_Id = data[0].trim();
+                    var floor_id = data[1].trim(); 
+                    var buildingname = data[2].trim(); 
+                    var floorname = data[3].trim(); 
+                    var roomname = data[4].trim();
+                    var autoCompleteItem = buildingname +', '+ floorname +', '+ roomname;
+                    if (autoCompleteItem.toUpperCase().includes(val.toUpperCase())) {
+                        var b = document.createElement("DIV");
+                        var startIndex = autoCompleteItem.toUpperCase().indexOf(val.toUpperCase());
+                        var matchingText = autoCompleteItem.substr(startIndex, val.length);
+                        var restOfText = autoCompleteItem.substr(startIndex + val.length);
+                        b.innerHTML = autoCompleteItem.substr(0, startIndex) + "<strong>" + matchingText + "</strong>" + restOfText;
+                        b.addEventListener("click", (function(room_Id) {
+                            return function(e) {
+                                var selectedValue = this.innerText;
+                                console.log("Selected Room ID:", room_Id);
+                                roomID = room_Id;
+                                floorID = floor_id;
+                                inp.value = selectedValue;
+                                closeAllLists();
+                            };
+                        })(room_Id));
+                        a.appendChild(b);
+                    }
+                }
+            });
+
+            inp.addEventListener("keydown", function(e) {
+                var x = document.getElementById(this.id + "autocomplete-list");
+                if (x) x = x.getElementsByTagName("div");
+                if (e.keyCode == 40) {
+                    currentFocus++;
+                    addActive(x);
+                } else if (e.keyCode == 38) { 
+                    currentFocus--;
+                    addActive(x);
+                } else if (e.keyCode == 13) {
+                    e.preventDefault();
+                    if (currentFocus > -1) {
+                        if (x) x[currentFocus].click();
+                    }
+                }
+            });
+
+            function addActive(x) {
+                if (!x) return false;
+                removeActive(x);
+                if (currentFocus >= x.length) currentFocus = 0;
+                if (currentFocus < 0) currentFocus = (x.length - 1);
+                x[currentFocus].classList.add("autocomplete-active");
+            }
+
+            function removeActive(x) {
+                for (var i = 0; i < x.length; i++) {
+                    x[i].classList.remove("autocomplete-active");
+                }
+            }
+
+            function closeAllLists(elmnt) {
+                var x = document.getElementsByClassName("autocomplete-items");
+                for (var i = 0; i < x.length; i++) {
+                    if (elmnt != x[i] && elmnt != inp) {
+                        x[i].parentNode.removeChild(x[i]);
+                    }
+                }
+            }
+
+            document.addEventListener("click", function (e) {
+                closeAllLists(e.target);
+            });
+        }
+
+        // PHP variable containing the autocomplete data from the database
+        var autocompleteData = <?php echo json_encode($autocompleteData); ?>;
+
+        // Call the autocomplete function with the input element and the autocomplete data
+        autocomplete(document.getElementById("searchInput"), autocompleteData);
+
+        // Event listener for the search button
+        function getRoomID(){
+            // Print the room_id
+            console.log("Room ID:", roomID);
+            displaySearchFloorImage(floorID);
+            displaySavedRooms(floorID, roomID);
+        }
+        var searchfloorMap;
+        function initializeViewSearchFloorMap(imageUrl) {
+            // Check if floorMap already exists; if so, remove it
+            if (searchfloorMap) {
+                searchfloorMap.remove();
+            }
+
+            // Create a new Leaflet map and set the view
+            searchfloorMap = L.map('searchedfloorImageContainer').setView([0, 0], 1.5);
+
+            // Add an image overlay to the map
+            L.imageOverlay(imageUrl, [[-80, -160], [80, 160]]).addTo(searchfloorMap);
+        }
+
+
+        function displaySearchFloorImage(floorId) {
+            var floorImageContainer = document.getElementById('searchedfloorImageContainer');
+            
+            // Send the selected floor ID in the request body of a POST request
+            $.ajax({
+                type: 'POST',
+                url: 'admin/get_floor_image.php',
+                data: { floor_id: floorId },
+                dataType: 'text', // Specify expected data type as text (the image URL)
+                success: function(imageUrl) {
+                    initializeViewSearchFloorMap(imageUrl);
+                },
+                error: function(xhr, status, error) {
+                    // Handle error
+                    console.error('AJAX error:', status, error);
+                    console.log(xhr.responseText); // Log the response for debugging
+                }
+            });
+        }
+
+        function displaySavedRooms(floorId, roomId) {
+            // Make an AJAX call to fetch saved room locations from the database
+            $.ajax({
+                type: 'POST',
+                url: 'admin/get_specific_room.php', // Change to the actual PHP script that fetches room data from the database
+                data: { floor_id: floorId, room_id: roomId}, // Pass floor_id as data
+                dataType: 'json',
+                success: function(response) {
+                    // Iterate through the response data and add markers for each saved room location
+                    response.forEach(function(room) {
+                        var roomLatLng = L.latLng(room.latitude, room.longitude);
+                        var roomMarker = L.marker(roomLatLng).addTo(searchfloorMap);
+
+                        var popupContent = '<center><h5><strong>' + room.room_name + '</strong></h5></center><br>';
+                        popupContent += '<img src="admin/assets/images/' + room.room_image + '" alt="' + room.room_name + '" style="max-width: 200px; max-height: 200px; margin-bottom: 15px; border-radius: 5px">';
+                        roomMarker.bindPopup(popupContent);
                     });
-                    a.appendChild(b);
+                },
+                error: function(xhr, status, error) {
+                    // Handle error
+                    console.error('AJAX error:', status, error);
+                    console.log(xhr.responseText); // Log the response for debugging
                 }
-            }
-        });
-
-        inp.addEventListener("keydown", function(e) {
-            var x = document.getElementById(this.id + "autocomplete-list");
-            if (x) x = x.getElementsByTagName("div");
-            if (e.keyCode == 40) {
-                currentFocus++;
-                addActive(x);
-            } else if (e.keyCode == 38) { 
-                currentFocus--;
-                addActive(x);
-            } else if (e.keyCode == 13) {
-                e.preventDefault();
-                if (currentFocus > -1) {
-                    if (x) x[currentFocus].click();
-                }
-            }
-        });
-
-        function addActive(x) {
-            if (!x) return false;
-            removeActive(x);
-            if (currentFocus >= x.length) currentFocus = 0;
-            if (currentFocus < 0) currentFocus = (x.length - 1);
-            x[currentFocus].classList.add("autocomplete-active");
+            });
         }
-
-        function removeActive(x) {
-            for (var i = 0; i < x.length; i++) {
-                x[i].classList.remove("autocomplete-active");
-            }
-        }
-
-        function closeAllLists(elmnt) {
-            var x = document.getElementsByClassName("autocomplete-items");
-            for (var i = 0; i < x.length; i++) {
-                if (elmnt != x[i] && elmnt != inp) {
-                    x[i].parentNode.removeChild(x[i]);
-                }
-            }
-        }
-
-        document.addEventListener("click", function (e) {
-            closeAllLists(e.target);
-        });
-    }
-
-    // Call the autocomplete function with the input element and the autocomplete data
-    autocomplete(document.getElementById("searchInput"), autocompleteData);
-</script>
-
+    </script>
 
 </body>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
