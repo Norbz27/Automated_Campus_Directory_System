@@ -14,14 +14,64 @@
 
     <!-- Load Leaflet JavaScript -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
+    
     <style>
         #map {
             height: 500px;
             width: 100%;
         }
+
+        .autocomplete-items {
+            position: absolute;
+            border: 1px solid #d4d4d4;
+            max-height: 200px; /* Set a fixed max height for the autocomplete list */
+            overflow-y: auto; /* Make the list scrollable */
+            z-index: 99;
+            width: 300px;
+            text-align: left;
+            background-color: #fff;
+        }
+        .autocomplete-items div {
+        padding: 10px;
+        cursor: pointer;
+        background-color: #fff;
+        border-bottom: 1px solid #d4d4d4;
+        }
+        .autocomplete-items div:hover {
+        /*when hovering an item:*/
+        background-color: #e9e9e9;
+        }
+        .autocomplete-active {
+        /*when navigating through the items using the arrow keys:*/
+        background-color: DodgerBlue !important;
+        color: #ffffff;
+        }
     </style>
+
        <link rel="stylesheet" href="style.css">
        <link rel="stylesheet" href="admin/assets/css/styles.min.css" />
+       <?php include_once 'room_nav_function.php';
+        include_once 'admin/db_con/db.php';
+       // SQL query to retrieve autocomplete data
+       $sql = "SELECT b.label building_label, f.name floor_name, r.room_name FROM tbl_rooms r LEFT JOIN tbl_floors f ON r.floor_id = f.floor_id LEFT JOIN tbl_building b ON f.building_id = b.building_id;";
+       
+       $result = $conn->query($sql);
+       
+       $autocompleteData = array();
+       
+       if ($result->num_rows > 0) {
+           // Fetch associative array of rows
+           while ($row = $result->fetch_assoc()) {
+               // Format the data as needed for autocomplete
+               $autocompleteData[] = $row['building_label'] . ', ' . $row['floor_name'] . ', ' . $row['room_name'];
+           }
+       }
+       
+       // Close database connection
+       $conn->close();
+
+       ?>
+       
 </head>
 <body>
     <div class="navigation-page-container">
@@ -38,10 +88,11 @@
             <div class="navigation-page">
                 <h5>Search a Location:</h5>
                 <div class="form-inline justify-content-center">
-                    <input type="text" name="" id="" style="width: 300px;" class="form-control mr-2">
-                    <button class="btn btn-primary mr-2" onclick="showSelectedLocation()"><i class="ti ti-location"></i></button>
+                    <form autocomplete="off" action="/action_page.php">
+                        <input type="text" id="searchInput" style="width: 300px;" class="form-control mr-2">
+                        <button type="submit" class="btn btn-primary mr-2"><i class="ti ti-location"></i></button>
+                    </form>
                 </div>
-
                 <p id="error-message" style="color: red;"></p>
             </div>
             <div id="allLocationsMap" style="height: 600px; width: 100%;"></div>
@@ -67,207 +118,91 @@
         </div>
     </div>
     <script>
-       function populateFloorDropdown(buildingId) {
-            console.log(buildingId);
-            $.ajax({
-                type: 'POST', // Change to POST
-                url: 'admin/get_floors.php',
-                data: { building_id: buildingId }, // Pass building_id in the request body
-                dataType: 'json', // Specify expected data type
-                success: function(response) {
-                    // Clear existing options in the dropdown
-                    $('#floorDropdown').empty();
+    // PHP variable containing the autocomplete data from the database
+    var autocompleteData = <?php echo json_encode($autocompleteData); ?>;
 
-                    // Add the first option "Choose a floor"
-                    $('#floorDropdown').append($('<option>', {
-                        value: '',
-                        text: 'Choose a floor'
-                    }));
+    // Function to initialize autocomplete
+    function autocomplete(inp, arr) {
+        var currentFocus;
 
-                    // Iterate over the response data and append options to the dropdown
-                    $.each(response, function(index, floor) {
-                        $('#floorDropdown').append($('<option>', {
-                            value: floor.floor_id,
-                            text: floor.name
-                        }));
-
-                        // Display the floor image for the first floor in the dropdown
-                        if (index === 0) {
-                            //displayFloorImage(floor.floor_id);
-                        }
+        inp.addEventListener("input", function(e) {
+            var val = this.value;
+            closeAllLists();
+            if (!val) { return false;}
+            currentFocus = -1;
+            var a = document.createElement("DIV");
+            a.setAttribute("id", this.id + "autocomplete-list");
+            a.setAttribute("class", "autocomplete-items");
+            this.parentNode.appendChild(a);
+            for (var i = 0; i < arr.length; i++) {
+                // Check if the input text is contained in any part of the autocomplete data
+                var autoCompleteItem = arr[i];
+                if (autoCompleteItem.toUpperCase().includes(val.toUpperCase())) {
+                    var b = document.createElement("DIV");
+                    var startIndex = autoCompleteItem.toUpperCase().indexOf(val.toUpperCase());
+                    var matchingText = autoCompleteItem.substr(startIndex, val.length);
+                    var restOfText = autoCompleteItem.substr(startIndex + val.length);
+                    b.innerHTML = autoCompleteItem.substr(0, startIndex) + "<strong>" + matchingText + "</strong>" + restOfText;
+                    b.innerHTML += "<input type='hidden' value='" + autoCompleteItem + "'>";
+                    b.addEventListener("click", function(e) {
+                        inp.value = this.getElementsByTagName("input")[0].value;
+                        closeAllLists();
                     });
-                },
-                error: function(xhr, status, error) {
-                    // Handle error
-                    console.error('AJAX error:', status, error);
-                    console.log(xhr.responseText); // Log the response for debugging
+                    a.appendChild(b);
                 }
-            });
-        }
-        var floorMap; // Declare floorMap globally or in a scope accessible to your functions
-
-        function initializeViewFloorMap(imageUrl) {
-            // Check if floorMap already exists; if so, remove it
-            if (floorMap) {
-                floorMap.remove();
             }
-
-            // Create a new Leaflet map and set the view
-            floorMap = L.map('floorImageContainer').setView([0, 0], 1.5);
-
-            // Add an image overlay to the map
-            L.imageOverlay(imageUrl, [[-80, -160], [80, 160]]).addTo(floorMap);
-        }
-
-
-        function displayFloorImage(floorId) {
-            var floorImageContainer = document.getElementById('floorImageContainer');
-            
-            // Send the selected floor ID in the request body of a POST request
-            $.ajax({
-                type: 'POST',
-                url: 'admin/get_floor_image.php',
-                data: { floor_id: floorId },
-                dataType: 'text', // Specify expected data type as text (the image URL)
-                success: function(imageUrl) {
-                    initializeViewFloorMap(imageUrl);
-                },
-                error: function(xhr, status, error) {
-                    // Handle error
-                    console.error('AJAX error:', status, error);
-                    console.log(xhr.responseText); // Log the response for debugging
-                }
-            });
-        }
-
-        // Event listener for when a floor is selected from the dropdown
-        $('#floorDropdown').on('change', function() {
-            var selectedFloorId = $(this).val(); // Get the selected floor ID
-
-            // Clear the first option "Choose a floor"
-            $('#floorDropdown option:contains("Choose a floor")').remove();
-
-            displayFloorImage(selectedFloorId);
-            displaySavedRooms(selectedFloorId);
-            /// Clear the existing markers and overlays on the map if floorMap is defined
-            if (floorMap) {
-                floorMap.eachLayer(function(layer) {
-                    if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
-                        floorMap.removeLayer(layer);
-                    }
-                });
-            }
-
         });
 
-        function displaySavedRooms(floorId) {
-            // Make an AJAX call to fetch saved room locations from the database
-            $.ajax({
-                type: 'POST',
-                url: 'admin/get_all_rooms.php', // Change to the actual PHP script that fetches room data from the database
-                data: { floor_id: floorId }, // Pass floor_id as data
-                dataType: 'json',
-                success: function(response) {
-                    // Iterate through the response data and add markers for each saved room location
-                    response.forEach(function(room) {
-                        var roomLatLng = L.latLng(room.latitude, room.longitude);
-                        var roomMarker = L.marker(roomLatLng).addTo(floorMap);
-
-                        var popupContent = '<center><h5><strong>' + room.room_name + '</strong></h5></center><br>';
-                        popupContent += '<img src="admin/assets/images/' + room.room_image + '" alt="' + room.room_name + '" style="max-width: 200px; max-height: 200px; margin-bottom: 15px; border-radius: 5px">';
-                        roomMarker.bindPopup(popupContent);
-                    });
-                },
-                error: function(xhr, status, error) {
-                    // Handle error
-                    console.error('AJAX error:', status, error);
-                    console.log(xhr.responseText); // Log the response for debugging
+        inp.addEventListener("keydown", function(e) {
+            var x = document.getElementById(this.id + "autocomplete-list");
+            if (x) x = x.getElementsByTagName("div");
+            if (e.keyCode == 40) {
+                currentFocus++;
+                addActive(x);
+            } else if (e.keyCode == 38) { 
+                currentFocus--;
+                addActive(x);
+            } else if (e.keyCode == 13) {
+                e.preventDefault();
+                if (currentFocus > -1) {
+                    if (x) x[currentFocus].click();
                 }
-            });
+            }
+        });
+
+        function addActive(x) {
+            if (!x) return false;
+            removeActive(x);
+            if (currentFocus >= x.length) currentFocus = 0;
+            if (currentFocus < 0) currentFocus = (x.length - 1);
+            x[currentFocus].classList.add("autocomplete-active");
         }
 
+        function removeActive(x) {
+            for (var i = 0; i < x.length; i++) {
+                x[i].classList.remove("autocomplete-active");
+            }
+        }
+
+        function closeAllLists(elmnt) {
+            var x = document.getElementsByClassName("autocomplete-items");
+            for (var i = 0; i < x.length; i++) {
+                if (elmnt != x[i] && elmnt != inp) {
+                    x[i].parentNode.removeChild(x[i]);
+                }
+            }
+        }
+
+        document.addEventListener("click", function (e) {
+            closeAllLists(e.target);
+        });
+    }
+
+    // Call the autocomplete function with the input element and the autocomplete data
+    autocomplete(document.getElementById("searchInput"), autocompleteData);
 </script>
-    <script>
-        var allLocationsMap;
-        var allLocationsInfowindows = [];
-        
-        function initAllLocationsMap() {
-            var surigaoCenter = {lat: 9.780337119613598, lng: 125.48353436162861}; // Coordinates for Surigao Education Center
-            allLocationsMap = new google.maps.Map(document.getElementById('allLocationsMap'), {
-                center: surigaoCenter,
-                zoom: 20 // Adjust the zoom level as needed
-            });
-
-            // Fetch locations from the database and add markers
-            fetchAllLocations();
-        }
-
-        function fetchAllLocations() {
-            // Send an AJAX request to fetch all locations from the database
-            $.ajax({
-                type: 'GET',
-                url: 'admin/get_all_building_locations.php',
-                success: function(response) {
-                    var locations = JSON.parse(response);
-                    locations.forEach(function(location) {
-                        addMarker(location);
-                    });
-                }
-            });
-        }
-
-        function addMarker(location) {
-            var marker = new google.maps.Marker({
-                position: {lat: parseFloat(location.latitude), lng: parseFloat(location.longitude)},
-                map: allLocationsMap
-            });
-
-            var infowindowContent = '<center><h5><strong>' + location.label + '</strong></h5></center>';
-            
-            // Check if location image exists
-            if (location.location_image !== null && location.location_image !== '') {
-                infowindowContent += '<center><img src="admin/assets/images/' + location.building_image + '" alt="Location Image" style="max-width: 200px; max-height: 200px; margin-bottom: 15px; border-radius: 5px"></center>';
-            }
-            
-            infowindowContent += '<div style="text-align: right;">';
-            infowindowContent += '<button class="btn btn-info btn-sm" title="View" data-toggle="modal" data-target="#viewFloorModal" onclick="populateFloorDropdown(' + location.building_id + ')"><i class="ti ti-eye"></i></button> ';     // Pass buildingId to the function
-            infowindowContent += '</div>';
-
-            var infowindow = new google.maps.InfoWindow({
-                content: infowindowContent
-            });
-
-            allLocationsInfowindows.push(infowindow);
-
-            marker.addListener('click', function() {
-                closeAllInfowindows();
-                infowindow.open(allLocationsMap, marker);
-            });
-        }
 
 
-        // Function to set the buildingId before opening the modal
-        function setBuildingId(buildingId) {
-            document.getElementById('buildingId').value = buildingId;
-        }
-
-        function closeAllInfowindows() {
-            allLocationsInfowindows.forEach(function(infowindow) {
-                infowindow.close();
-            });
-        }
-
-        function deleteLocation(label) {
-            // Set the label value in the hidden input field
-            document.getElementById('deleteLocationLabel').value = label;
-            // Submit the form
-            document.getElementById('deleteLocationForm').submit();
-        }
-
-        $(document).ready(function() {
-            initAllLocationsMap();
-        });
-    </script>
 </body>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
