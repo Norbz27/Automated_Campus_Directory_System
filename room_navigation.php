@@ -14,7 +14,8 @@
 
     <!-- Load Leaflet JavaScript -->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
-    
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="admin/assets/css/styles.min.css" />
     <style>
         #map {
             height: 500px;
@@ -46,10 +47,12 @@
         background-color: DodgerBlue !important;
         color: #ffffff;
         }
+        #bfrname{
+            font-weight: bold;
+        }
     </style>
 
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="admin/assets/css/styles.min.css" />
+ 
     <?php
     include_once 'admin/db_con/db.php';
     // SQL query to retrieve autocomplete data
@@ -122,14 +125,18 @@
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="viewFloorModalLabel">Result</h5>
+                    <h5 class="modal-title">Result</h5>
                 </div>
                 <div class="modal-body">
-                    <div id="searchedfloorImageContainer" style="width: 100%; height: 400px;"></div>
+                <div class="row justify-content-center mb-3">
+                <h3 id="bfrname" class="text-center"></h3> <!-- Added 'text-center' class -->
+                </div>
+                <div id="searchedfloorImageContainer" style="width: 100%; height: 400px;"></div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
+
             </div>
         </div>
     </div>
@@ -137,6 +144,7 @@
     <script>
         var roomID = 0;
         var floorID = 0;
+        var name = "";
     // Function to initialize autocomplete
         function autocomplete(inp, arr) {
             var currentFocus;
@@ -170,6 +178,7 @@
                                 console.log("Selected Room ID:", room_Id);
                                 roomID = room_Id;
                                 floorID = floor_id;
+                                name = autoCompleteItem;
                                 inp.value = selectedValue;
                                 closeAllLists();
                             };
@@ -230,17 +239,25 @@
         // Call the autocomplete function with the input element and the autocomplete data
         autocomplete(document.getElementById("searchInput"), autocompleteData);
 
-        // Event listener for the search button
         function getRoomID() {
             if (roomID === 0) {
                 document.getElementById('error-message').innerText = "No match found. Please select a valid location.";
             } else {
                 document.getElementById('error-message').innerText = ""; // Clear error message if roomID is selected
                 console.log("Room ID:", roomID);
-                displaySearchFloorImage(floorID);
-                displaySavedRooms(floorID, roomID);
+                setTimeout(function() {
+                    displaySearchFloorImage(floorID);
+                    setTimeout(function() {
+                        displaySavedRooms(floorID, roomID);
+                    }, 500);
+                }, 500);
+              
+                $('#searchviewFloorModal').modal('hide'); // Dismiss modal if roomID is selected
+                document.getElementById('bfrname').innerText = name; // Set the modal title with the selected room name
             }
         }
+
+        
 
         var searchfloorMap;
         function initializeViewSearchFloorMap(imageUrl) {
@@ -278,30 +295,34 @@
         }
 
         function displaySavedRooms(floorId, roomId) {
-            // Make an AJAX call to fetch saved room locations from the database
-            $.ajax({
-                type: 'POST',
-                url: 'admin/get_specific_room.php', // Change to the actual PHP script that fetches room data from the database
-                data: { floor_id: floorId, room_id: roomId}, // Pass floor_id as data
-                dataType: 'json',
-                success: function(response) {
-                    // Iterate through the response data and add markers for each saved room location
-                    response.forEach(function(room) {
-                        var roomLatLng = L.latLng(room.latitude, room.longitude);
-                        var roomMarker = L.marker(roomLatLng).addTo(searchfloorMap);
+        // Make an AJAX call to fetch saved room locations from the database
+        $.ajax({
+            type: 'POST',
+            url: 'admin/get_specific_room.php', // Change to the actual PHP script that fetches room data from the database
+            data: { floor_id: floorId, room_id: roomId }, // Pass floor_id as data
+            dataType: 'json',
+            success: function (response) {
+                // Iterate through the response data and add markers for each saved room location
+                response.forEach(function (room) {
+                    var roomLatLng = L.latLng(room.latitude, room.longitude);
+                    var roomMarker = L.marker(roomLatLng).addTo(searchfloorMap);
 
-                        var popupContent = '<center><h5><strong>' + room.room_name + '</strong></h5></center><br>';
-                        popupContent += '<img src="admin/assets/images/' + room.room_image + '" alt="' + room.room_name + '" style="max-width: 200px; max-height: 200px; margin-bottom: 15px; border-radius: 5px">';
-                        roomMarker.bindPopup(popupContent);
-                    });
-                },
-                error: function(xhr, status, error) {
-                    // Handle error
-                    console.error('AJAX error:', status, error);
-                    console.log(xhr.responseText); // Log the response for debugging
-                }
-            });
-        }
+                    var popupContent = '<center><h5><strong>' + room.room_name + '</strong></h5></center><br>';
+                    popupContent += '<img src="admin/assets/images/' + room.room_image + '" alt="' + room.room_name + '" style="max-width: 200px; max-height: 200px; margin-bottom: 15px; border-radius: 5px">';
+                    roomMarker.bindPopup(popupContent);
+
+                    // Set view on marker location
+                    searchfloorMap.setView(roomLatLng, 2); // 18 is the zoom level, you can adjust as needed
+                });
+            },
+            error: function (xhr, status, error) {
+                // Handle error
+                console.error('AJAX error:', status, error);
+                console.log(xhr.responseText); // Log the response for debugging
+            }
+        });
+    }
+
     </script>
 
 </body>
