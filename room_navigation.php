@@ -87,7 +87,7 @@
             <div class="navigation-page">
                 <h5>Search a Location:</h5>
                 <div class="form-inline justify-content-center">
-                    <form autocomplete="off" action="">
+                    <form autocomplete="off" onsubmit="event.preventDefault()">
                         <input type="text" id="searchInput" style="width: 300px;" class="form-control mr-2">
                         <button data-toggle="modal" onclick="getRoomID()" data-target="#searchviewFloorModal" class="btn btn-primary mr-2"><i class="ti ti-location"></i></button>
                     </form>
