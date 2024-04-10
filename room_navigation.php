@@ -66,7 +66,7 @@
         // Fetch associative array of rows
         while ($row = $result->fetch_assoc()) {
             // Format the data as needed for autocomplete
-            $autocompleteData[] = $row['room_id'] . ', ' . $row['floor_id'] . ', ' . $row['building_label'] . ', ' . $row['floor_name'] . ', ' . $row['room_name'];
+            $autocompleteData[] = $row['floor_id'] . ', ' . $row['room_id'] . ', ' . $row['building_label'] . ', ' . $row['floor_name'] . ', ' . $row['room_name'];
         }
     }
     
@@ -140,6 +140,7 @@
             </div>
         </div>
     </div>
+    
     <?php include_once 'room_nav_function.php'; ?>
     <script>
         var roomID = 0;
@@ -158,31 +159,29 @@
                 a.setAttribute("id", this.id + "autocomplete-list");
                 a.setAttribute("class", "autocomplete-items");
                 this.parentNode.appendChild(a);
-                for (var i = 0; i < arr.length; i++) {
-                    var data = arr[i].split(',');
-                    var room_Id = data[0].trim();
-                    var floor_id = data[1].trim(); 
-                    var buildingname = data[2].trim(); 
-                    var floorname = data[3].trim(); 
-                    var roomname = data[4].trim();
-                    var autoCompleteItem = buildingname +', '+ floorname +', '+ roomname;
+                for (var i = 1; i < arr.length; i++) { // Start from index 1
+                    var autoCompleteItem = arr[i];
                     if (autoCompleteItem.toUpperCase().includes(val.toUpperCase())) {
                         var b = document.createElement("DIV");
                         var startIndex = autoCompleteItem.toUpperCase().indexOf(val.toUpperCase());
                         var matchingText = autoCompleteItem.substr(startIndex, val.length);
                         var restOfText = autoCompleteItem.substr(startIndex + val.length);
                         b.innerHTML = autoCompleteItem.substr(0, startIndex) + "<strong>" + matchingText + "</strong>" + restOfText;
-                        b.addEventListener("click", (function(room_Id) {
-                            return function(e) {
-                                var selectedValue = this.innerText;
-                                console.log("Selected Room ID:", room_Id);
-                                roomID = room_Id;
-                                floorID = floor_id;
-                                name = autoCompleteItem;
-                                inp.value = selectedValue;
-                                closeAllLists();
-                            };
-                        })(room_Id));
+                        b.addEventListener("click", function(e) {
+                            var selectedValue = this.innerText;
+                            var floor_Id = selectedValue.split(',')[0];
+                            var room_Id = selectedValue.split(',')[1];
+                            var building = selectedValue.split(',')[2];
+                            var floor = selectedValue.split(',')[3];
+                            var room = selectedValue.split(',')[4];
+                            console.log("Selected Room ID:", room_Id);
+                            console.log("Selected floor ID:", floor_Id);
+                            roomID = room_Id;
+                            floorID = floor_Id;
+                            name = building +', '+ floor +', '+ room;
+                            inp.value = selectedValue;
+                            closeAllLists();
+                        });
                         a.appendChild(b);
                     }
                 }
@@ -307,8 +306,8 @@
                     var roomLatLng = L.latLng(room.latitude, room.longitude);
                     var roomMarker = L.marker(roomLatLng).addTo(searchfloorMap);
 
-                    var popupContent = '<center><h5><strong>' + room.room_name + '</strong></h5></center><br>';
-                    popupContent += '<img src="admin/assets/images/' + room.room_image + '" alt="' + room.room_name + '" style="max-width: 200px; max-height: 200px; margin-bottom: 15px; border-radius: 5px">';
+                    var popupContent = '<center><h5 style="max-width: 200px"><strong>' + room.room_name + '</strong></h5></center><br>';
+                        popupContent += '<img src="admin/assets/images/' + room.room_image + '" alt="' + room.room_name + '" style="width: 100%; margin-bottom: 15px; border-radius: 5px">';
                     roomMarker.bindPopup(popupContent);
 
                     // Set view on marker location

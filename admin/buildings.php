@@ -136,7 +136,7 @@
 
                         // Display the floor image for the first floor in the dropdown
                         if (index === 0) {
-                            //displayFloorImage(floor.floor_id);
+                            displayFloorImage(null);
                         }
                     });
                 },
@@ -196,21 +196,28 @@
         function displayFloorImage(floorId) {
             var floorImageContainer = document.getElementById('floorImageContainer');
             
-            // Send the selected floor ID in the request body of a POST request
-            $.ajax({
-                type: 'POST',
-                url: 'get_floor_image.php',
-                data: { floor_id: floorId },
-                dataType: 'text', // Specify expected data type as text (the image URL)
-                success: function(imageUrl) {
-                    initializeViewFloorMap(imageUrl);
-                },
-                error: function(xhr, status, error) {
-                    // Handle error
-                    console.error('AJAX error:', status, error);
-                    console.log(xhr.responseText); // Log the response for debugging
-                }
-            });
+            if(floorId == null){
+                setTimeout(function() {
+                    initializeViewFloorMap('assets/images/placeholder/placeholder.webp');
+                }, 500);
+                
+            }else{
+                // Send the selected floor ID in the request body of a POST request
+                $.ajax({
+                    type: 'POST',
+                    url: 'get_floor_image.php',
+                    data: { floor_id: floorId },
+                    dataType: 'text', // Specify expected data type as text (the image URL)
+                    success: function(imageUrl) {
+                        initializeViewFloorMap(imageUrl);
+                    },
+                    error: function(xhr, status, error) {
+                        // Handle error
+                        console.error('AJAX error:', status, error);
+                        console.log(xhr.responseText); // Log the response for debugging
+                    }
+                });
+            }
         }
 
         $('#viewFloorModal').on('shown.bs.modal', function () {
@@ -251,8 +258,8 @@
                         var roomLatLng = L.latLng(room.latitude, room.longitude);
                         var roomMarker = L.marker(roomLatLng).addTo(floorMap);
 
-                        var popupContent = '<center><h5><strong>' + room.room_name + '</strong></h5></center><br>';
-                        popupContent += '<img src="assets/images/' + room.room_image + '" alt="' + room.room_name + '" style="max-width: 200px; max-height: 200px; margin-bottom: 15px; border-radius: 5px">';
+                        var popupContent = '<center><h5 style="max-width: 200px"><strong>' + room.room_name + '</strong></h5></center><br>';
+                        popupContent += '<img src="assets/images/' + room.room_image + '" alt="' + room.room_name + '" style="width: 100%; margin-bottom: 15px; border-radius: 5px">';
                         popupContent += '<center><button class="btn btn-primary btn-sm" onclick="deleteRoom(' + room.room_id + ', ' + room.floor_Id + ')">Delete Location</button></center>';
                         roomMarker.bindPopup(popupContent);
                     });
@@ -468,6 +475,8 @@
                             icon: 'success',
                             title: 'Success',
                             text: 'Building location and description saved',
+                        }).then((result) => {
+                            location.reload();
                         });
                     } else {
                         // Display an error message using SweetAlert
@@ -564,10 +573,26 @@
             contentType: false, // Set contentType to false when sending FormData
             processData: false, // Set processData to false when sending FormData
             success: function(response) {
-                // Handle the response accordingly
-                // For example, you can display a success message or reload the page
-                // Reload the page to reflect the changes
-                location.reload();
+                var data = JSON.parse(response);
+                if (data.status === 'success') {
+                    // Display a success message using SweetAlert
+                    swal({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'New floor added',
+                    }).then(function() {
+                        // Reload the page after the user confirms
+                        location.reload();
+                    });
+                } else {
+                    // Display an error message using SweetAlert
+                    swal({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message,
+                    });
+                }
+
             },
             error: function(xhr, status, error) {
                 // Handle errors here

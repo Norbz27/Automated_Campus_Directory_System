@@ -6,7 +6,7 @@ if(isset($_POST['building_id'])) {
     $building_id = $_POST['building_id'];
     
     // Query to fetch the floors based on the building ID
-    $query = "SELECT floor_id, name FROM tbl_floors WHERE building_id = ?";
+    $query = "SELECT floor_id, name FROM tbl_floors WHERE building_id = ? ORDER BY name ASC";
     
     // Prepare the statement
     $stmt = $conn->prepare($query);

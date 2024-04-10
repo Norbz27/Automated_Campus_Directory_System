@@ -25,7 +25,7 @@
 
                         // Display the floor image for the first floor in the dropdown
                         if (index === 0) {
-                            //displayFloorImage(floor.floor_id);
+                            displayFloorImage(null);
                         }
                     });
                 },
@@ -55,21 +55,28 @@
         function displayFloorImage(floorId) {
             var floorImageContainer = document.getElementById('floorImageContainer');
             
-            // Send the selected floor ID in the request body of a POST request
-            $.ajax({
-                type: 'POST',
-                url: 'admin/get_floor_image.php',
-                data: { floor_id: floorId },
-                dataType: 'text', // Specify expected data type as text (the image URL)
-                success: function(imageUrl) {
-                    initializeViewFloorMap(imageUrl);
-                },
-                error: function(xhr, status, error) {
-                    // Handle error
-                    console.error('AJAX error:', status, error);
-                    console.log(xhr.responseText); // Log the response for debugging
-                }
-            });
+            if(floorId == null){
+                setTimeout(function() {
+                    initializeViewFloorMap('admin/assets/images/placeholder/placeholder.webp');
+                }, 500);
+                
+            }else{
+                // Send the selected floor ID in the request body of a POST request
+                $.ajax({
+                    type: 'POST',
+                    url: 'admin/get_floor_image.php',
+                    data: { floor_id: floorId },
+                    dataType: 'text', // Specify expected data type as text (the image URL)
+                    success: function(imageUrl) {
+                        initializeViewFloorMap(imageUrl);
+                    },
+                    error: function(xhr, status, error) {
+                        // Handle error
+                        console.error('AJAX error:', status, error);
+                        console.log(xhr.responseText); // Log the response for debugging
+                    }
+                });
+            }
         }
 
         // Event listener for when a floor is selected from the dropdown
@@ -78,9 +85,14 @@
 
             // Clear the first option "Choose a floor"
             $('#floorDropdown option:contains("Choose a floor")').remove();
+            console.log(selectedFloorId);
+            setTimeout(function() {
+                displayFloorImage(selectedFloorId);
+                setTimeout(function() {
+                    displayAllSavedRooms(selectedFloorId);
+                }, 500);
+            }, 500);
 
-            displayFloorImage(selectedFloorId);
-            displaySavedRooms(selectedFloorId);
             /// Clear the existing markers and overlays on the map if floorMap is defined
             if (floorMap) {
                 floorMap.eachLayer(function(layer) {
@@ -92,7 +104,7 @@
 
         });
 
-        function displaySavedRooms(floorId) {
+        function displayAllSavedRooms(floorId) {
             // Make an AJAX call to fetch saved room locations from the database
             $.ajax({
                 type: 'POST',
@@ -105,8 +117,8 @@
                         var roomLatLng = L.latLng(room.latitude, room.longitude);
                         var roomMarker = L.marker(roomLatLng).addTo(floorMap);
 
-                        var popupContent = '<center><h5><strong>' + room.room_name + '</strong></h5></center><br>';
-                        popupContent += '<img src="admin/assets/images/' + room.room_image + '" alt="' + room.room_name + '" style="max-width: 200px; max-height: 200px; margin-bottom: 15px; border-radius: 5px">';
+                        var popupContent = '<center><h5 style="max-width: 200px"><strong>' + room.room_name + '</strong></h5></center><br>';
+                        popupContent += '<img src="admin/assets/images/' + room.room_image + '" alt="' + room.room_name + '" style="width: 100%; margin-bottom: 15px; border-radius: 5px">';
                         roomMarker.bindPopup(popupContent);
                     });
                 },
