@@ -231,12 +231,17 @@
         autocomplete(document.getElementById("searchInput"), autocompleteData);
 
         // Event listener for the search button
-        function getRoomID(){
-            // Print the room_id
-            console.log("Room ID:", roomID);
-            displaySearchFloorImage(floorID);
-            displaySavedRooms(floorID, roomID);
+        function getRoomID() {
+            if (roomID === 0) {
+                document.getElementById('error-message').innerText = "No match found. Please select a valid location.";
+            } else {
+                document.getElementById('error-message').innerText = ""; // Clear error message if roomID is selected
+                console.log("Room ID:", roomID);
+                displaySearchFloorImage(floorID);
+                displaySavedRooms(floorID, roomID);
+            }
         }
+
         var searchfloorMap;
         function initializeViewSearchFloorMap(imageUrl) {
             // Check if floorMap already exists; if so, remove it
