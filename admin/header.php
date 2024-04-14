@@ -63,14 +63,14 @@ if (!isset($_SESSION['account_id'])) {
                 <span class="hide-menu">Dashboard</span>
               </a>
             </li>
-            <li class="sidebar-item">
+            <!--<li class="sidebar-item">
               <a class="sidebar-link" href="locations.php" aria-expanded="false">
                 <span>
                   <i class="ti ti-map-pin"></i>
                 </span>
                 <span class="hide-menu">Specific Locations</span>
               </a>
-            </li>
+            </li>-->
             <li class="sidebar-item">
               <a class="sidebar-link" href="buildings.php" aria-expanded="false">
                 <span>

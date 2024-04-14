@@ -56,7 +56,7 @@
     <?php
     include_once 'admin/db_con/db.php';
     // SQL query to retrieve autocomplete data
-    $sql = "SELECT r.room_id, f.floor_id, b.label building_label, f.name floor_name, r.room_name FROM tbl_rooms r LEFT JOIN tbl_floors f ON r.floor_id = f.floor_id LEFT JOIN tbl_building b ON f.building_id = b.building_id;";
+    $sql = "SELECT r.room_id, f.floor_id, b.building_id, b.label building_label, f.name floor_name, r.room_name FROM tbl_rooms r LEFT JOIN tbl_floors f ON r.floor_id = f.floor_id LEFT JOIN tbl_building b ON f.building_id = b.building_id;";
     
     $result = $conn->query($sql);
     
@@ -66,7 +66,7 @@
         // Fetch associative array of rows
         while ($row = $result->fetch_assoc()) {
             // Format the data as needed for autocomplete
-            $autocompleteData[] = $row['floor_id'] . ', ' . $row['room_id'] . ', ' . $row['building_label'] . ', ' . $row['floor_name'] . ', ' . $row['room_name'];
+            $autocompleteData[] = $row['floor_id'] . ', ' . $row['room_id'] . ', ' .$row['building_id'] . ', ' . $row['building_label'] . ', ' . $row['floor_name'] . ', ' . $row['room_name'];
         }
     }
     
@@ -78,11 +78,11 @@
 </head>
 <body>
     <div class="navigation-page-container">
-        <div class="row justify-content-start mb-3">
+        <div class="row justify-content-start mb-4">
             <div class="col-auto">
-                <a class="btn btn-none float-left" href="navigation_input_page.php">
+                <!--<a class="btn btn-none float-left" href="navigation_input_page.php">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-narrow-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l14 0" /><path d="M5 12l4 4" /><path d="M5 12l4 -4" /></svg> Specific Location
-                </a>
+                </a>-->
             </div>
         </div>
         <div class="form-con">
@@ -92,10 +92,11 @@
                 <div class="form-inline justify-content-center">
                     <form autocomplete="off" onsubmit="event.preventDefault()">
                         <input type="text" id="searchInput" style="width: 300px;" class="form-control mr-2">
-                        <button data-toggle="modal" onclick="getRoomID()" data-target="#searchviewFloorModal" class="btn btn-primary mr-2"><i class="ti ti-location"></i></button>
+                        <button title="Direction" onclick="getBuildingID()" class="btn btn-primary mr-2"><i class="ti ti-arrow-bear-left-2"></i></button>
+                        <button data-toggle="modal" onclick="getRoomID()" title="Navigate" data-target="#searchviewFloorModal" class="btn btn-primary mr-2"><i class="ti ti-location"></i></button>
                     </form>
                 </div>
-                <p id="error-message" style="color: red;"></p>
+                <p id="error-message" style="color: red; font-size: 12px; margin-top: 5px">Click direction first to get the road direction on the building.</p>
             </div>
             <div id="allLocationsMap" style="height: 600px; width: 100%;"></div>
         </div>
@@ -145,6 +146,7 @@
     <script>
         var roomID = 0;
         var floorID = 0;
+        var buildingID = 0;
         var name = "";
     // Function to initialize autocomplete
         function autocomplete(inp, arr) {
@@ -171,15 +173,19 @@
                             var selectedValue = this.innerText;
                             var floor_Id = selectedValue.split(',')[0];
                             var room_Id = selectedValue.split(',')[1];
-                            var building = selectedValue.split(',')[2];
-                            var floor = selectedValue.split(',')[3];
-                            var room = selectedValue.split(',')[4];
+                            var building_id = selectedValue.split(',')[2];
+                            var building = selectedValue.split(',')[3];
+                            var floor = selectedValue.split(',')[4];
+                            var room = selectedValue.split(',')[5];
                             console.log("Selected Room ID:", room_Id);
+                            console.log("Selected floor ID:", floor_Id);
                             console.log("Selected floor ID:", floor_Id);
                             roomID = room_Id;
                             floorID = floor_Id;
+                            buildingID = building_id;
                             name = building +', '+ floor +', '+ room;
-                            inp.value = selectedValue;
+
+                            inp.value = name;
                             closeAllLists();
                         });
                         a.appendChild(b);
@@ -242,7 +248,7 @@
             if (roomID === 0) {
                 document.getElementById('error-message').innerText = "No match found. Please select a valid location.";
             } else {
-                document.getElementById('error-message').innerText = ""; // Clear error message if roomID is selected
+                document.getElementById('error-message').innerText = "Click direction first to get the road direction on the building."; // Clear error message if roomID is selected
                 console.log("Room ID:", roomID);
                 setTimeout(function() {
                     displaySearchFloorImage(floorID);
@@ -255,8 +261,122 @@
                 document.getElementById('bfrname').innerText = name; // Set the modal title with the selected room name
             }
         }
-
         
+        function getBuildingID(){
+            if (buildingID === 0) {
+                document.getElementById('error-message').innerText = "No match found. Please select a valid location.";
+            } else {
+                document.getElementById('error-message').innerText = "Click direction first to get the road direction on the building.";
+                getDirectionsToBuilding(buildingID);
+            }
+        }
+
+        var directionsRenderer; // Declare directionsRenderer globally
+var userLocationMarker; // Declare userLocationMarker globally
+
+// Function to get directions from user location to selected building
+function getDirectionsToBuilding(buildingId) {
+    // Check if buildingId is valid
+    if (!buildingId) {
+        console.error("Invalid buildingId");
+        return;
+    }
+
+    // Remove existing directions if any
+    if (directionsRenderer) {
+        directionsRenderer.setMap(null);
+    }
+
+    // Get user's current location
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            //var userLatLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+            var origin = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+            };
+            var buildingLatLng;
+
+            // Get the coordinates of the selected building from the database
+            $.ajax({
+                type: 'GET',
+                url: 'admin/get_building_coordinates.php', // Replace with the actual PHP script
+                data: { building_id: buildingId },
+                dataType: 'json',
+                success: function(response) {
+                    if (response && response.latitude && response.longitude) {
+                        buildingLatLng = new google.maps.LatLng(response.latitude, response.longitude);
+
+                        // Calculate directions
+                        var directionsService = new google.maps.DirectionsService();
+                        directionsRenderer = new google.maps.DirectionsRenderer();
+                        directionsRenderer.setMap(allLocationsMap);
+
+                        var request = {
+                            origin: origin,
+                            destination: buildingLatLng,
+                            travelMode: google.maps.TravelMode.DRIVING
+                        };
+                        
+                        userLocationMarker = new google.maps.Marker({
+                            position: origin,
+                            map: allLocationsMap,
+                            title: 'Your Location'
+                        });
+
+                        directionsService.route(request, function(result, status) {
+                            if (status == google.maps.DirectionsStatus.OK) {
+                                directionsRenderer.setDirections(result);
+                                
+                                // Accessing distance and duration
+                                var distance = result.routes[0].legs[0].distance.text;
+                                var duration = result.routes[0].legs[0].duration.text;
+
+                                // Create an info window
+                                var infowindowcalc = new google.maps.InfoWindow({
+                                    content: '<strong>Distance:</strong> ' + distance + '<br><strong>Duration:</strong> ' + duration
+                                });
+
+                                // Open the info window on the user's location marker
+                                if (userLocationMarker) {
+                                    infowindowcalc.open(allLocationsMap, userLocationMarker);
+                                }
+
+                                // Attach click event to open info window
+                                userLocationMarker.addListener('click', function() {
+                                    infowindowcalc.open(allLocationsMap, userLocationMarker);
+                                });
+                            } else {
+                                console.error('Directions request failed due to ' + status);
+                            }
+                        });
+                    } else {
+                        console.error('Failed to retrieve building coordinates.');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX error:', status, error);
+                    console.log(xhr.responseText);
+                }
+            });
+        }, function() {
+            // Handle geolocation error
+            handleLocationError(true, document.getElementById('error-message'));
+        });
+    } else {
+        // Browser doesn't support geolocation
+        handleLocationError(false, document.getElementById('error-message'));
+    }
+}
+
+        // Function to handle geolocation errors
+        function handleLocationError(browserHasGeolocation, errorDiv) {
+            var errorMessage = browserHasGeolocation ?
+                "Geolocation service failed. Please ensure that location access is enabled." :
+                "Your browser doesn't support geolocation.";
+            errorDiv.innerText = errorMessage;
+        }
+
 
         var searchfloorMap;
         function initializeViewSearchFloorMap(imageUrl) {

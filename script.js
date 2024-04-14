@@ -1,5 +1,5 @@
 document.getElementById("getStartedBtn").addEventListener("click", function() {
-    window.location.href = "navigation_input_page.php";
+    window.location.href = "room_navigation.php";
 });
 
 function showNavigationPage() {
