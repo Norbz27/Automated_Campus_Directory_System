@@ -80,9 +80,9 @@
     <div class="navigation-page-container">
         <div class="row justify-content-start mb-4">
             <div class="col-auto">
-                <!--<a class="btn btn-none float-left" href="navigation_input_page.php">
+                <a class="btn btn-none float-left" href="navigation_input_page.php">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-narrow-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l14 0" /><path d="M5 12l4 4" /><path d="M5 12l4 -4" /></svg> Specific Location
-                </a>-->
+                </a>
             </div>
         </div>
         <div class="form-con">
@@ -272,102 +272,119 @@
         }
 
         var directionsRenderer; // Declare directionsRenderer globally
-var userLocationMarker; // Declare userLocationMarker globally
+        var userLocationMarker; // Declare userLocationMarker globally
 
-// Function to get directions from user location to selected building
-function getDirectionsToBuilding(buildingId) {
-    // Check if buildingId is valid
-    if (!buildingId) {
-        console.error("Invalid buildingId");
-        return;
-    }
+        // Function to get directions from user location to selected building
+        function getDirectionsToBuilding(buildingId) {
+            // Check if buildingId is valid
+            if (!buildingId) {
+                console.error("Invalid buildingId");
+                return;
+            }
 
-    // Remove existing directions if any
-    if (directionsRenderer) {
-        directionsRenderer.setMap(null);
-    }
+            // Remove existing directions if any
+            if (directionsRenderer) {
+                directionsRenderer.setMap(null);
+            }
 
-    // Get user's current location
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function(position) {
-            //var userLatLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-            var origin = {
-                lat: position.coords.latitude,
-                lng: position.coords.longitude
-            };
-            var buildingLatLng;
+            // Get user's current location
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    //var userLatLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+                    var origin = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    var buildingLatLng;
 
-            // Get the coordinates of the selected building from the database
-            $.ajax({
-                type: 'GET',
-                url: 'admin/get_building_coordinates.php', // Replace with the actual PHP script
-                data: { building_id: buildingId },
-                dataType: 'json',
-                success: function(response) {
-                    if (response && response.latitude && response.longitude) {
-                        buildingLatLng = new google.maps.LatLng(response.latitude, response.longitude);
+                    // Get the coordinates of the selected building from the database
+                    $.ajax({
+                        type: 'GET',
+                        url: 'admin/get_building_coordinates.php', // Replace with the actual PHP script
+                        data: { building_id: buildingId },
+                        dataType: 'json',
+                        success: function(response) {
+                            if (response && response.latitude && response.longitude) {
+                                buildingLatLng = new google.maps.LatLng(response.latitude, response.longitude);
 
-                        // Calculate directions
-                        var directionsService = new google.maps.DirectionsService();
-                        directionsRenderer = new google.maps.DirectionsRenderer();
-                        directionsRenderer.setMap(allLocationsMap);
+                                // Calculate directions
+                                var directionsService = new google.maps.DirectionsService();
+                                directionsRenderer = new google.maps.DirectionsRenderer();
+                                directionsRenderer.setMap(allLocationsMap);
 
-                        var request = {
-                            origin: origin,
-                            destination: buildingLatLng,
-                            travelMode: google.maps.TravelMode.DRIVING
-                        };
-                        
-                        userLocationMarker = new google.maps.Marker({
-                            position: origin,
-                            map: allLocationsMap,
-                            title: 'Your Location'
-                        });
-
-                        directionsService.route(request, function(result, status) {
-                            if (status == google.maps.DirectionsStatus.OK) {
-                                directionsRenderer.setDirections(result);
+                                var request = {
+                                    origin: origin,
+                                    destination: buildingLatLng,
+                                    travelMode: google.maps.TravelMode.DRIVING
+                                };
                                 
-                                // Accessing distance and duration
-                                var distance = result.routes[0].legs[0].distance.text;
-                                var duration = result.routes[0].legs[0].duration.text;
-
-                                // Create an info window
-                                var infowindowcalc = new google.maps.InfoWindow({
-                                    content: '<strong>Distance:</strong> ' + distance + '<br><strong>Duration:</strong> ' + duration
+                                userLocationMarker = new google.maps.Marker({
+                                    position: origin,
+                                    map: allLocationsMap,
+                                    title: 'Your Location'
                                 });
 
-                                // Open the info window on the user's location marker
-                                if (userLocationMarker) {
-                                    infowindowcalc.open(allLocationsMap, userLocationMarker);
-                                }
+                                directionsService.route(request, function(result, status) {
+                                    if (status == google.maps.DirectionsStatus.OK) {
+                                        directionsRenderer.setDirections(result);
+                                        
+                                        // Accessing distance and duration
+                                        var distance = result.routes[0].legs[0].distance.text;
+                                        var duration = result.routes[0].legs[0].duration.text;
 
-                                // Attach click event to open info window
-                                userLocationMarker.addListener('click', function() {
-                                    infowindowcalc.open(allLocationsMap, userLocationMarker);
+                                        var destinationMarker = new google.maps.Marker({
+                                            position: buildingLatLng,
+                                            map: allLocationsMap,
+                                            title: response.label
+                                        });
+                                        
+                                        // Create an info window
+                                        var infowindowcalc = new google.maps.InfoWindow({
+                                            content: '<strong>Distance:</strong> ' + distance + '<br><strong>Duration:</strong> ' + duration
+                                        });
+                                        
+                                        var infowindowContent = '<center><h5><strong>' + response.label + '</strong></h5></center>';
+                                            infowindowContent += '<center><img src="admin/assets/images/' + response.building_image + '" alt="Location Image" style="max-width: 200px; max-height: 200px; margin-bottom: 15px; border-radius: 5px"></center>';
+                                        // Create infowindow
+                                        var infowindow = new google.maps.InfoWindow({
+                                            content: infowindowContent
+                                        });
+                                        infowindow.open(allLocationsMap, destinationMarker);
+                                        // Open infowindow when destination marker is clicked
+                                        destinationMarker.addListener('click', function() {
+                                            infowindow.open(allLocationsMap, destinationMarker);
+                                        });
+                                        // Open the info window on the user's location marker
+                                        if (userLocationMarker) {
+                                            infowindowcalc.open(allLocationsMap, userLocationMarker);
+                                        }
+
+                                        // Attach click event to open info window
+                                        userLocationMarker.addListener('click', function() {
+                                            infowindowcalc.open(allLocationsMap, userLocationMarker);
+                                        });
+                                    } else {
+                                        console.error('Directions request failed due to ' + status);
+                                    }
                                 });
                             } else {
-                                console.error('Directions request failed due to ' + status);
+                                console.error('Failed to retrieve building coordinates.');
                             }
-                        });
-                    } else {
-                        console.error('Failed to retrieve building coordinates.');
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('AJAX error:', status, error);
-                    console.log(xhr.responseText);
-                }
-            });
-        }, function() {
-            // Handle geolocation error
-            handleLocationError(true, document.getElementById('error-message'));
-        });
-    } else {
-        // Browser doesn't support geolocation
-        handleLocationError(false, document.getElementById('error-message'));
-    }
-}
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('AJAX error:', status, error);
+                            console.log(xhr.responseText);
+                        }
+                    });
+                }, function() {
+                    // Handle geolocation error
+                    handleLocationError(true, document.getElementById('error-message'));
+                });
+            } else {
+                // Browser doesn't support geolocation
+                handleLocationError(false, document.getElementById('error-message'));
+            }
+        }
 
         // Function to handle geolocation errors
         function handleLocationError(browserHasGeolocation, errorDiv) {
