@@ -34,7 +34,7 @@
                   </div>
                   <button type="submit" class="btn btn-primary w-100 py-8 fs-4 mb-4 rounded-2">Sign In</button>
                   <?php if(isset($_GET['error']) && $_GET['error'] == 'loginblocked') {
-                    echo '<p class="text-center text-danger">You are blocked! Try again after 60 seconds</p>';
+                    echo '<p class="text-center text-danger">Login is blocked! Try again after 60 seconds</p>';
                   }else if(isset($_GET['error']) && $_GET['error'] == 'invalidlogin'){
                     echo '<p class="text-center text-danger">Invalid username or password</p>';
                   } ?>
