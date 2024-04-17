@@ -56,7 +56,7 @@
     <?php
     include_once 'admin/db_con/db.php';
     // SQL query to retrieve autocomplete data
-    $sql = "SELECT r.room_id, f.floor_id, b.building_id, b.label building_label, f.name floor_name, r.room_name FROM tbl_rooms r LEFT JOIN tbl_floors f ON r.floor_id = f.floor_id LEFT JOIN tbl_building b ON f.building_id = b.building_id;";
+    $sql = "SELECT r.room_id, r.room_num, f.floor_id, b.building_id, b.label building_label, f.name floor_name, r.room_name FROM tbl_rooms r LEFT JOIN tbl_floors f ON r.floor_id = f.floor_id LEFT JOIN tbl_building b ON f.building_id = b.building_id;";
     
     $result = $conn->query($sql);
     
@@ -66,7 +66,7 @@
         // Fetch associative array of rows
         while ($row = $result->fetch_assoc()) {
             // Format the data as needed for autocomplete
-            $autocompleteData[] = $row['floor_id'] . ', ' . $row['room_id'] . ', ' .$row['building_id'] . ', ' . $row['building_label'] . ', ' . $row['floor_name'] . ', ' . $row['room_name'];
+            $autocompleteData[] = $row['floor_id'] . ', ' . $row['room_id'] . ', ' .$row['building_id'] . ', ' . $row['building_label'] . ', ' . $row['floor_name'] . ', ' . $row['room_name'] . ', ' . $row['room_num'];
         }
     }
     
@@ -177,13 +177,14 @@
                             var building = selectedValue.split(',')[3];
                             var floor = selectedValue.split(',')[4];
                             var room = selectedValue.split(',')[5];
+                            var room_num = selectedValue.split(',')[6];
                             console.log("Selected Room ID:", room_Id);
                             console.log("Selected floor ID:", floor_Id);
                             console.log("Selected floor ID:", floor_Id);
                             roomID = room_Id;
                             floorID = floor_Id;
                             buildingID = building_id;
-                            name = building +', '+ floor +', '+ room;
+                            name = building +', '+ floor +', '+ room +', '+ room_num;
 
                             inp.value = name;
                             closeAllLists();
