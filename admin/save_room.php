@@ -7,6 +7,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         // Prepare data for insertion
         $roomName = $_POST['room_name'];
+        $roomNum = $_POST['room_num'];
         $longitude = $_POST['longitude'];
         $latitude = $_POST['latitude'];
         $floorId = $_POST['floor_id'];
@@ -20,8 +21,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $roomImage = $_FILES["room_image"]["name"];
             
             // Prepare SQL statement
-            $sql = "INSERT INTO tbl_rooms (room_name, longitude, latitude, room_image, floor_id)
-                    VALUES ('$roomName', '$longitude', '$latitude', '$roomImage', '$floorId')";
+            $sql = "INSERT INTO tbl_rooms (room_name, longitude, latitude, room_image, floor_id, room_num)
+                    VALUES ('$roomName', '$longitude', '$latitude', '$roomImage', '$floorId', '$roomNum')";
             
             if ($conn->query($sql) === TRUE) {
                 echo json_encode(array("status" => "success", "message" => "Location saved successfully."));
