@@ -121,10 +121,13 @@
             infowindowContent += '<input type="hidden" value="'+ location.location_image +'" name="edit_location_img">';
             infowindowContent += '</label>';
             infowindowContent += '</div>';
-            infowindowContent += '<center><button type="button" class="btn btn-primary btn-sm" id="edit_btn" onclick="editBtn()">Edit Location</button></center>';
-            infowindowContent += '<center><button type="submit" name="submit" class="btn btn-primary btn-sm d-none" id="save_btn">Save</button></center>';
+            infowindowContent += '<div style="text-align: center;">';
+            infowindowContent += '<button type="button" class="btn btn-primary btn-sm mr-1" id="edit_btn" onclick="editBtn()">Edit Location</button>';
+            infowindowContent += '<button type="submit" name="submit" class="btn btn-primary btn-sm d-none mr-1" id="save_btn" style="margin-left: 5px;">Save</button>'; // Added margin-left
+            infowindowContent += '<button class="btn btn-primary btn-sm ml-2" onclick="deleteLocation(\'' + location.label + '\')"><i class="ti ti-trash"></i></button>';
+            infowindowContent += '</div>';
             infowindowContent += '</form>';
-            infowindowContent += '<center><button class="btn btn-primary btn-sm mt-2" onclick="deleteLocation(\'' + location.label + '\')">Delete Location</button></center>';
+
 
             var infowindow = new google.maps.InfoWindow({
                 content: infowindowContent

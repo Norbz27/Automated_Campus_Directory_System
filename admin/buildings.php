@@ -305,10 +305,12 @@
                         popupContent += '<input type="hidden" value="'+ room.room_image +'" name="edit_room_img">';
                         popupContent += '</label>';
                         popupContent += '</div>';
-                        popupContent += '<center><button type="button" class="btn btn-primary btn-sm" id="edit_btn" onclick="editBtn()">Edit Location</button></center>';
-                        popupContent += '<center><button type="submit" name="submit" value="' + room.room_id + '" class="btn btn-primary btn-sm d-none" id="save_btn">Save</button></center>';
+                        popupContent += '<div style="text-align: center;">';
+                        popupContent += '<button type="button" class="btn btn-primary btn-sm mr-1" id="edit_btn" onclick="editBtn()">Edit Location</button>';
+                        popupContent += '<button type="submit" name="submit" value="' + room.room_id + '" class="btn btn-primary btn-sm d-none mr-1" id="save_btn">Save</button>';
+                        popupContent += '<button class="btn btn-primary btn-sm" onclick="deleteRoom(' + room.room_id + ', ' + room.floor_Id + ')"><i class="ti ti-trash"></i></button>';
+                        popupContent += '</div>';
                         popupContent += '</form>';
-                        popupContent += '<center><button class="btn btn-primary btn-sm mt-3" onclick="deleteRoom(' + room.room_id + ', ' + room.floor_Id + ')">Delete Location</button></center>';
                         roomMarker.bindPopup(popupContent);
                     });
                 },
@@ -470,7 +472,7 @@
 
             $.ajax({
                 type: "POST",
-                url: "save_edit_room.php",
+                url: "save_edit_location.php",
                 data: formData,
                 processData: false,
                 contentType: false,
