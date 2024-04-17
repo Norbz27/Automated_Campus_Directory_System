@@ -10,7 +10,7 @@
   <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
   
   <script async
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAm4XE_BJt3LlMcvJi1erXZcY7Ln8xA-qg&loading=async&callback=initAllLocationsMap">
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAm4XE_BJt3LlMcvJi1erXZcY7Ln8xA-qg&loading=async&callback=initMap">
 </script>  
     <style>
         #map {
