@@ -470,7 +470,7 @@
 
             $.ajax({
                 type: "POST",
-                url: "save_edit_location.php",
+                url: "save_edit_room.php",
                 data: formData,
                 processData: false,
                 contentType: false,

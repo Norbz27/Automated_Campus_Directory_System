@@ -1,6 +1,36 @@
 <?php include_once 'header.php'?>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
+<style>
+        .profile-picture {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .overlay {
+        position: absolute;
+        top: 0;
+        background-color: rgba(0, 0, 0, 0.5); /* Adjust the opacity as needed */
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        width: 180px; 
+        height: 180px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .profile-picture:hover .overlay {
+        opacity: 1;
+    }
+    .form-label{
+        font-size: 14px;
+    }
+</style>
+
 <div class="container-fluid">
     <!--  Row 1 -->
     <!-- Button trigger modal -->
@@ -73,14 +103,28 @@
                 map: allLocationsMap
             });
 
-            var infowindowContent = '<center><h5><strong>' + location.label + '</strong></h5></center>';
+            var infowindowContent = '<form id="edit_form" enctype="multipart/form-data">';
+                infowindowContent += '<input type="hidden" class="form-control form-control-sm mb-2" value="'+ location.location_id +'" style="width:auto;" name="edit_location_id">';
+                infowindowContent += '<input type="text" class="form-control form-control-sm mb-2" value="'+ location.label +'" style="width:auto;" disabled id="edit_location_label" name="edit_location_label">';
+                infowindowContent += '<div class="profile-picture">';
+                infowindowContent += '<label for="adprofile">';
             
             // Check if location image exists
             if (location.location_image !== null && location.location_image !== '') {
-                infowindowContent += '<center><img src="assets/images/' + location.location_image + '" alt="Location Image" style="max-width: 200px; max-height: 200px; margin-bottom: 15px; border-radius: 5px"></center>';
+                infowindowContent += '<img src="assets/images/' + location.location_image + '" alt="location Name" id="adprofilePreview" style="width:180px; height: 180px; object-fit: cover; margin-bottom: 15px; border-radius: 5px">';
             }
             
-            infowindowContent += '<center><button class="btn btn-primary btn-sm" onclick="deleteLocation(\'' + location.label + '\')">Delete Location</button></center>';
+            infowindowContent += '<div class="overlay">';
+            infowindowContent += '<p style="font-size: 14px">Upload new profile</p>';
+            infowindowContent += '</div>';
+            infowindowContent += '<input type="file" name="adprofile" id="adprofile" onchange="previewImageAdd()" accept="image/*" hidden disabled>';
+            infowindowContent += '<input type="hidden" value="'+ location.location_image +'" name="edit_location_img">';
+            infowindowContent += '</label>';
+            infowindowContent += '</div>';
+            infowindowContent += '<center><button type="button" class="btn btn-primary btn-sm" id="edit_btn" onclick="editBtn()">Edit Location</button></center>';
+            infowindowContent += '<center><button type="submit" name="submit" class="btn btn-primary btn-sm d-none" id="save_btn">Save</button></center>';
+            infowindowContent += '</form>';
+            infowindowContent += '<center><button class="btn btn-primary btn-sm mt-2" onclick="deleteLocation(\'' + location.label + '\')">Delete Location</button></center>';
 
             var infowindow = new google.maps.InfoWindow({
                 content: infowindowContent
@@ -93,6 +137,71 @@
                 infowindow.open(allLocationsMap, marker);
             });
         }
+
+        function editBtn(){
+            $('#edit_btn').addClass('d-none');
+            $('#save_btn').removeClass('d-none');
+            $('#edit_room_num').prop('disabled', false);
+            $('#edit_location_label').prop('disabled', false);
+            $('#adprofile').prop('disabled', false);
+        }
+
+        function previewImage() {
+            const fileInput = document.getElementById('viewprofile');
+            const img = document.getElementById('profilePic');
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                img.src = e.target.result;
+            };
+
+            reader.readAsDataURL(file);
+        }
+
+        function previewImageAdd() {
+            const fileInput = document.getElementById('adprofile');
+            const img = document.getElementById('adprofilePreview');
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                img.src = e.target.result;
+            };
+
+            reader.readAsDataURL(file);
+        }
+
+        $(document).on("submit", "#edit_form", function (e) {
+            e.preventDefault();
+
+            var formData = new FormData(this);
+            formData.append("save_edit", true);
+
+            $.ajax({
+                type: "POST",
+                url: "save_edit_location.php",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                var res = JSON.parse(response);
+                if (res.status == 404) {
+                    $('#edit_btn').removeClass('d-none');
+                    $('#save_btn').addClass('d-none');
+                    $('#edit_room_num').prop('disabled', true);
+                    $('#edit_location_label').prop('disabled', true);
+                    $('#adprofile').prop('disabled', true);
+                } else if (res.status == 200) {
+                    $('#edit_btn').removeClass('d-none');
+                    $('#save_btn').addClass('d-none');
+                    $('#edit_room_num').prop('disabled', true);
+                    $('#edit_location_label').prop('disabled', true);
+                    $('#adprofile').prop('disabled', true);
+                }
+                },
+            });
+        });
 
 
         function closeAllInfowindows() {

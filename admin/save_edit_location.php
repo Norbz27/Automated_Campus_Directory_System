@@ -3,10 +3,9 @@
 include_once 'db_con/db.php';
 
 if (isset($_POST['save_edit'])) {
-    $edit_room_num = $_POST['edit_room_num'];
-    $edit_room_name = $_POST['edit_room_name'];
-    $room_id = $_POST['edit_room_id'];
-    $edit_room_img = $_POST['edit_room_img'];
+    $edit_location_label = $_POST['edit_location_label'];
+    $location_id = $_POST['edit_location_id'];
+    $edit_location_img = $_POST['edit_location_img'];
 
     if (!empty($_FILES['adprofile']['name'])) {
         $targetDir = "assets/images/";
@@ -23,13 +22,13 @@ if (isset($_POST['save_edit'])) {
             exit;
         }
     } else {
-        $roomImage = $edit_room_img; // Use the existing image if no new image is uploaded
+        $roomImage = $edit_location_img; // Use the existing image if no new image is uploaded
     }
 
-    $query = "UPDATE tbl_rooms SET room_name = ?, room_num = ?, room_image = ? WHERE room_id = ?";
+    $query = "UPDATE tbl_locations SET label = ?, location_image = ? WHERE location_id = ?";
     $stmt = mysqli_prepare($conn, $query);
 
-    mysqli_stmt_bind_param($stmt, "sssi", $edit_room_name, $edit_room_num, $roomImage, $room_id);
+    mysqli_stmt_bind_param($stmt, "ssi", $edit_location_label, $roomImage, $location_id);
     mysqli_stmt_execute($stmt);
 
     if (mysqli_stmt_errno($stmt) != 0) {
@@ -48,8 +47,7 @@ if (isset($_POST['save_edit'])) {
         } else {
             $res = [
                 'status' => 404,
-                'message' => 'Location is not updated successfully',
-                'room_id' => $room_id
+                'message' => 'Location is not updated successfully'
             ];
         }
     }

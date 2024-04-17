@@ -3,16 +3,17 @@
 include_once 'db_con/db.php';
 
 if (isset($_POST['save_edit'])) {
-    $building_label = $_POST['building_label'];
-    $building_id = $_POST['building_id'];
-    $edit_building_img = $_POST['edit_building_img'];
+    $edit_room_num = $_POST['edit_room_num'];
+    $edit_room_name = $_POST['edit_room_name'];
+    $room_id = $_POST['edit_room_id'];
+    $edit_room_img = $_POST['edit_room_img'];
 
-    if (!empty($_FILES['adprofile_building']['name'])) {
+    if (!empty($_FILES['adprofile']['name'])) {
         $targetDir = "assets/images/";
-        $targetFile = $targetDir . basename($_FILES['adprofile_building']['name']);
+        $targetFile = $targetDir . basename($_FILES['adprofile']['name']);
 
-        if (move_uploaded_file($_FILES['adprofile_building']['tmp_name'], $targetFile)) {
-            $roomImage = $_FILES['adprofile_building']['name'];
+        if (move_uploaded_file($_FILES['adprofile']['tmp_name'], $targetFile)) {
+            $roomImage = $_FILES['adprofile']['name'];
         } else {
             $res = [
                 'status' => 405,
@@ -22,13 +23,13 @@ if (isset($_POST['save_edit'])) {
             exit;
         }
     } else {
-        $roomImage = $edit_building_img; // Use the existing image if no new image is uploaded
+        $roomImage = $edit_room_img; // Use the existing image if no new image is uploaded
     }
 
-    $query = "UPDATE tbl_building SET label = ?, building_image = ? WHERE building_id = ?";
+    $query = "UPDATE tbl_rooms SET room_name = ?, room_num = ?, room_image = ? WHERE room_id = ?";
     $stmt = mysqli_prepare($conn, $query);
 
-    mysqli_stmt_bind_param($stmt, "sssi", $building_label, $roomImage, $building_id);
+    mysqli_stmt_bind_param($stmt, "sssi", $edit_room_name, $edit_room_num, $roomImage, $room_id);
     mysqli_stmt_execute($stmt);
 
     if (mysqli_stmt_errno($stmt) != 0) {
@@ -41,13 +42,13 @@ if (isset($_POST['save_edit'])) {
         if ($affectedRows > 0) {
             $res = [
                 'status' => 200,
-                'message' => 'Building location is updated successfully',
+                'message' => 'Location is updated successfully',
                 'affected_rows' => $affectedRows
             ];
         } else {
             $res = [
                 'status' => 404,
-                'message' => 'Building location is not updated successfully',
+                'message' => 'Location is not updated successfully',
                 'room_id' => $room_id
             ];
         }
