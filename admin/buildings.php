@@ -27,7 +27,33 @@
     .dropzone:hover {
         background-color: #f8f9fa;
     }
+    .profile-picture {
+        position: relative;
+        overflow: hidden;
+    }
 
+    .overlay {
+        position: absolute;
+        top: 0;
+        background-color: rgba(0, 0, 0, 0.5); /* Adjust the opacity as needed */
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        width: 180px; 
+        height: 180px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .profile-picture:hover .overlay {
+        opacity: 1;
+    }
+    .form-label{
+        font-size: 14px;
+    }
 </style>
 <div class="container-fluid">
 <div class="row justify-content-end mb-3">
@@ -106,7 +132,6 @@
         </div>
     </div>
 </div>
-
 
 <script>
        function populateFloorDropdown() {
@@ -253,32 +278,47 @@
         });
 
         function displaySavedRooms(floorId) {
-            // Make an AJAX call to fetch saved room locations from the database
+
             $.ajax({
                 type: 'POST',
-                url: 'get_all_rooms.php', // Change to the actual PHP script that fetches room data from the database
-                data: { floor_id: floorId }, // Pass floor_id as data
+                url: 'get_all_rooms.php',
+                data: { floor_id: floorId },
                 dataType: 'json',
                 success: function(response) {
+                    // Hide the save button before iterating through the response dat
                     // Iterate through the response data and add markers for each saved room location
                     response.forEach(function(room) {
                         var roomLatLng = L.latLng(room.latitude, room.longitude);
                         var roomMarker = L.marker(roomLatLng).addTo(floorMap);
 
-                        var popupContent = '<center><h5 style="max-width: 200px"><strong>' + room.room_num + ' <br> ' + room.room_name +'</strong></h5></center><br>';
-                        popupContent += '<img src="assets/images/' + room.room_image + '" alt="' + room.room_name + '" style="width: 100%; margin-bottom: 15px; border-radius: 5px">';
-                        popupContent += '<center><button class="btn btn-primary btn-sm">Edit Location</button></center><br>';
-                        popupContent += '<center><button class="btn btn-primary btn-sm" onclick="deleteRoom(' + room.room_id + ', ' + room.floor_Id + ')">Delete Location</button></center>';
+                        var popupContent = '<form id="edit_form" enctype="multipart/form-data">';
+                        popupContent += '<input type="hidden" class="form-control form-control-sm mb-2" value="'+ room.room_id +'" style="width:auto;" name="edit_room_id">';
+                        popupContent += '<input type="text" class="form-control form-control-sm mb-2" value="'+ room.room_num +'" style="width:auto;" disabled id="edit_room_num" name="edit_room_num">';
+                        popupContent += '<input type="text" class="form-control form-control-sm mb-2" value="'+ room.room_name +'" style="width:auto;" disabled id="edit_room_name" name="edit_room_name">';
+                        popupContent += '<div class="profile-picture">';
+                        popupContent += '<label for="adprofile">';
+                        popupContent += '<img src="assets/images/' + room.room_image + '" alt="' + room.room_name + '" id="adprofilePreview" style="width:180px; height: 180px; object-fit: cover; margin-bottom: 15px; border-radius: 5px">';
+                        popupContent += '<div class="overlay">';
+                        popupContent += '<p style="font-size: 14px">Upload new profile</p>';
+                        popupContent += '</div>';
+                        popupContent += '<input type="file" name="adprofile" id="adprofile" onchange="previewImageAdd()" accept="image/*" hidden disabled>';
+                        popupContent += '<input type="hidden" value="'+ room.room_image +'" name="edit_room_img">';
+                        popupContent += '</label>';
+                        popupContent += '</div>';
+                        popupContent += '<center><button type="button" class="btn btn-primary btn-sm" id="edit_btn" onclick="editBtn()">Edit Location</button></center>';
+                        popupContent += '<center><button type="submit" name="submit" value="' + room.room_id + '" class="btn btn-primary btn-sm d-none" id="save_btn">Save</button></center>';
+                        popupContent += '</form>';
+                        popupContent += '<center><button class="btn btn-primary btn-sm mt-3" onclick="deleteRoom(' + room.room_id + ', ' + room.floor_Id + ')">Delete Location</button></center>';
                         roomMarker.bindPopup(popupContent);
                     });
                 },
                 error: function(xhr, status, error) {
-                    // Handle error
                     console.error('AJAX error:', status, error);
                     console.log(xhr.responseText); // Log the response for debugging
                 }
             });
         }
+
 
         function deleteRoom(roomId, floorId) {
             // Display a confirmation dialog using SweetAlert
@@ -387,6 +427,71 @@
                 }
             });
         }
+
+        function editBtn(){
+            $('#edit_btn').addClass('d-none');
+            $('#save_btn').removeClass('d-none');
+            $('#edit_room_num').prop('disabled', false);
+            $('#edit_room_name').prop('disabled', false);
+            $('#adprofile').prop('disabled', false);
+        }
+
+        function previewImage() {
+            const fileInput = document.getElementById('viewprofile');
+            const img = document.getElementById('profilePic');
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                img.src = e.target.result;
+            };
+
+            reader.readAsDataURL(file);
+        }
+
+        function previewImageAdd() {
+            const fileInput = document.getElementById('adprofile');
+            const img = document.getElementById('adprofilePreview');
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                img.src = e.target.result;
+            };
+
+            reader.readAsDataURL(file);
+        }
+
+        $(document).on("submit", "#edit_form", function (e) {
+            e.preventDefault();
+
+            var formData = new FormData(this);
+            formData.append("save_edit", true);
+
+            $.ajax({
+                type: "POST",
+                url: "save_edit_location.php",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                var res = JSON.parse(response);
+                if (res.status == 404) {
+                    $('#edit_btn').removeClass('d-none');
+                    $('#save_btn').addClass('d-none');
+                    $('#edit_room_num').prop('disabled', true);
+                    $('#edit_room_name').prop('disabled', true);
+                    $('#adprofile').prop('disabled', true);
+                } else if (res.status == 200) {
+                    $('#edit_btn').removeClass('d-none');
+                    $('#save_btn').addClass('d-none');
+                    $('#edit_room_num').prop('disabled', true);
+                    $('#edit_room_name').prop('disabled', true);
+                    $('#adprofile').prop('disabled', true);
+                }
+                },
+            });
+        });
 
 </script>
   <script>
@@ -514,16 +619,31 @@
                 map: allLocationsMap
             });
 
-            var infowindowContent = '<center><h5><strong>' + location.label + '</strong></h5></center>';
+            var infowindowContent ='<form id="building_form">';
+            infowindowContent += '<center><input type="text" class="form-control mb-3" value="' + location.label + '" id="building_label" name="building_label" disabled></center>';
+            infowindowContent += '<center><input type="hidden" name="building_id" value="' + location.building_id + '"></center>';
+            infowindowContent += '<div class="profile-picture">';
+            infowindowContent += '<label for="adprofile_building">';
             
             // Check if location image exists
             if (location.location_image !== null && location.location_image !== '') {
-                infowindowContent += '<center><img src="assets/images/' + location.building_image + '" alt="Location Image" style="max-width: 200px; max-height: 200px; margin-bottom: 15px; border-radius: 5px"></center>';
+                infowindowContent += '<img src="assets/images/' + location.building_image + '" alt="Building IMG" id="adprofilePreviewBuilding" style="width:180px; height: 180px; object-fit: cover; margin-bottom: 15px; border-radius: 5px">';
             }
+            infowindowContent += '<div class="overlay">';
+            infowindowContent += '<p style="font-size: 14px">Upload new profile</p>';
+            infowindowContent += '</div>';
+            infowindowContent += '<input type="file" name="adprofile_building" id="adprofile_building" onchange="previewImageAddBuilding()" accept="image/*" hidden disabled>';
+            infowindowContent += '<input type="hidden" value="'+ location.building_image +'" name="edit_building_img">';
+            infowindowContent += '</label>';
+            infowindowContent += '</div>';
+            infowindowContent += '<center><button type="submit" name="submit" class="btn btn-primary btn-sm d-none mb-3" id="building_save_btn">Save</button></center>';
+            infowindowContent += '</form>';
             
             infowindowContent += '<div style="text-align: right;">';
             infowindowContent += '<button class="btn btn-primary btn-sm" onclick="deleteLocation(\'' + location.label + '\')" title="Delete"><i class="ti ti-trash"></i></button> ';
-            infowindowContent += '<button class="btn btn-info btn-sm" title="View" data-toggle="modal" data-target="#viewFloorModal" data-building-id="' + location.building_id + '"><i class="ti ti-eye"></i></button> ';            // Pass buildingId to the function
+            infowindowContent += '<button class="btn btn-info btn-sm" title="View" data-toggle="modal" data-target="#viewFloorModal" data-building-id="' + location.building_id + '"><i class="ti ti-eye"></i></button> ';
+            infowindowContent += '<button class="btn btn-info btn-sm" title="Edit" onclick="editBuilding()" id="building_edit_btn"><i class="ti ti-edit"></i></button> ';
+            infowindowContent += '<button class="btn btn-info btn-sm d-none" title="Cancel" onclick="canceleditBuilding()" id="building_cancel_btn"><i class="ti ti-x"></i></button> ';
             infowindowContent += '<button class="btn btn-success btn-sm" title="Add Floors" onclick="setBuildingId(' + location.building_id + ')" data-toggle="modal" data-target="#addFloorModal"><i class="ti ti-stairs"></i></button>';
             infowindowContent += '</div>';
 
@@ -538,6 +658,58 @@
                 infowindow.open(allLocationsMap, marker);
             });
         }
+
+        function previewImageAddBuilding() {
+            const fileInput = document.getElementById('adprofile_building');
+            const img = document.getElementById('adprofilePreviewBuilding');
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                img.src = e.target.result;
+            };
+
+            reader.readAsDataURL(file);
+        }
+
+        function editBuilding(){
+            $('#building_label').prop('disabled', false);
+            $('#building_edit_btn').addClass('d-none');
+            $('#building_save_btn').removeClass('d-none');
+            $('#building_cancel_btn').removeClass('d-none');
+            $('#adprofile_building').prop('disabled', false);
+        }
+
+        function canceleditBuilding(){
+            $('#building_label').prop('disabled', true);
+            $('#building_edit_btn').removeClass('d-none');
+            $('#building_save_btn').addClass('d-none');
+            $('#building_cancel_btn').addClass('d-none');
+            $('#adprofile_building').prop('disabled', true);
+        }
+
+        $(document).on("submit", "#building_form", function (e) {
+            e.preventDefault();
+
+            var formData = new FormData(this);
+            formData.append("save_edit", true);
+
+            $.ajax({
+                type: "POST",
+                url: "save_edit_building.php",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                var res = JSON.parse(response);
+                if (res.status == 404) {
+                    canceleditBuilding();
+                } else if (res.status == 200) {
+                    canceleditBuilding();
+                }
+                },
+            });
+        });
 
 
         // Function to set the buildingId before opening the modal

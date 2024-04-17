@@ -108,7 +108,7 @@
         }
 
         $(document).ready(function() {
-            initAllLocationsMap();
+            initMap();
         });
     </script>
 
