@@ -171,6 +171,8 @@
 
                 // Create a popup with an input text field
                 var inputPopup = L.popup().setContent(`
+                    <strong><label class="mb-1" for="markerTextInput">Set a Room No.:</label></strong>
+                    <input class="form-control" style="width:100%" type="text" id="roomInput">
                     <strong><label class="mb-1" for="markerTextInput">Set a Label:</label></strong>
                     <input class="form-control" style="width:100%" type="text" id="markerTextInput">
                     <label class="mt-3 mb-1" for="roomImage">Upload Image:</label> <input type="file" class="form-control-file" id="roomImage" accept="image/*">
@@ -263,8 +265,9 @@
                         var roomLatLng = L.latLng(room.latitude, room.longitude);
                         var roomMarker = L.marker(roomLatLng).addTo(floorMap);
 
-                        var popupContent = '<center><h5 style="max-width: 200px"><strong>' + room.room_name + '</strong></h5></center><br>';
+                        var popupContent = '<center><h5 style="max-width: 200px"><strong>' + room.room_num + ' <br> ' + room.room_name +'</strong></h5></center><br>';
                         popupContent += '<img src="assets/images/' + room.room_image + '" alt="' + room.room_name + '" style="width: 100%; margin-bottom: 15px; border-radius: 5px">';
+                        popupContent += '<center><button class="btn btn-primary btn-sm">Edit Location</button></center><br>';
                         popupContent += '<center><button class="btn btn-primary btn-sm" onclick="deleteRoom(' + room.room_id + ', ' + room.floor_Id + ')">Delete Location</button></center>';
                         roomMarker.bindPopup(popupContent);
                     });
@@ -331,6 +334,7 @@
         function submitRoom() {
             // Retrieve input values
             var roomName = $('#markerTextInput').val();
+            var roomNum = $('#roomInput').val();
             var longitude = recentMarker.getLatLng().lng;
             var latitude = recentMarker.getLatLng().lat;
             var roomImage = $('#roomImage')[0].files[0];
@@ -339,6 +343,7 @@
             // Create a FormData object to send file data
             var formData = new FormData();
             formData.append('room_name', roomName);
+            formData.append('room_num', roomNum);
             formData.append('longitude', longitude);
             formData.append('latitude', latitude);
             formData.append('room_image', roomImage);
