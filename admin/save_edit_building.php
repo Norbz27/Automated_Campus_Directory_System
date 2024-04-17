@@ -28,7 +28,7 @@ if (isset($_POST['save_edit'])) {
     $query = "UPDATE tbl_building SET label = ?, building_image = ? WHERE building_id = ?";
     $stmt = mysqli_prepare($conn, $query);
 
-    mysqli_stmt_bind_param($stmt, "sssi", $building_label, $roomImage, $building_id);
+    mysqli_stmt_bind_param($stmt, "ssi", $building_label, $roomImage, $building_id);
     mysqli_stmt_execute($stmt);
 
     if (mysqli_stmt_errno($stmt) != 0) {
