@@ -47,8 +47,7 @@ if (isset($_POST['save_edit'])) {
         } else {
             $res = [
                 'status' => 404,
-                'message' => 'Building location is not updated successfully',
-                'room_id' => $room_id
+                'message' => 'Building location is not updated successfully'
             ];
         }
     }
