@@ -235,8 +235,13 @@
             // Clear the first option "Choose a floor"
             $('#floorDropdown option:contains("Choose a floor")').remove();
 
-            displayFloorImage(selectedFloorId);
-            displaySavedRooms(selectedFloorId);
+            setTimeout(function() {
+                displayFloorImage(selectedFloorId);
+                setTimeout(function() {
+                    displaySavedRooms(selectedFloorId);
+                }, 500);
+            }, 500);
+            
             // Clear the existing markers and overlays on the map
             floorMap.eachLayer(function(layer) {
                 if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
